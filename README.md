@@ -179,8 +179,8 @@ Three languages from day one:
 
 |Item                               |Status                  |Notes                                                                  |
 |-----------------------------------|------------------------|-----------------------------------------------------------------------|
-|Proton email (geovibeskz@proton.me)|To do                   |Use for all registrations                                              |
-|Instagram handle                   |To do                   |Claim now even if no posts yet                                         |
+|Proton email (geovibeskz@protonmail.com)|Done               |Use for all registrations                                              |
+|Instagram handle                   |Done                    |Claim now even if no posts yet                                         |
 |Telegram channel                   |To do                   |Claim now                                                              |
 |geovibes.kz domain                 |To do when budget allows|~10,000₸/year via ps.kz — priority domain                              |
 |geo-vibes.com                      |Skip                    |Hyphen awkward to say out loud                                         |
