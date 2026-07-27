@@ -1,0 +1,35 @@
+{
+  "app": {
+    "name": "GeoVibes",
+    "tagline": "Кушай. Покупай. Танцуй."
+  },
+  "onboarding": {
+    "cta": "ИСКАТЬ",
+    "slogan": "Наша Разница В\nВайбе"
+  },
+  "nav": {
+    "home": "Главная",
+    "list": "Список",
+    "profile": "Профиль",
+    "settings": "Настройки"
+  },
+  "home": {
+    "searchPlaceholder": "Поиск по прекрасным местам...",
+    "allPlaces": "Все vibe места",
+    "emptyCategory": "There are no places in this category yet"
+  },
+  "list": {
+    "heading": "The most interesting\ncategories"
+  },
+  "category": {
+    "placeCount_one": "{{count}} place",
+    "placeCount_other": "{{count}} places"
+  },
+  "space": {
+    "description": "Description",
+    "whatInside": "What's inside:",
+    "route": "Directions",
+    "call": "Call",
+    "share": "Share"
+  }
+}

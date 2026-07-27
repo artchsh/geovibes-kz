@@ -1,0 +1,39 @@
+{
+  "_TODO": "Kazakh must be reviewed by a native speaker — do NOT auto-translate.",
+  "app": {
+    "name": "GeoVibes",
+    "tagline": "Кушай. Покупай. Танцуй."
+  },
+  "onboarding": {
+    "_TODO": "Kazakh translations need native-speaker review.",
+    "cta": "ИСКАТЬ",
+    "slogan": "Наша Разница В\nВайбе"
+  },
+  "nav": {
+    "home": "Главная",
+    "list": "Список",
+    "profile": "Профиль",
+    "settings": "Настройки"
+  },
+  "home": {
+    "searchPlaceholder": "Поиск по прекрасным местам...",
+    "allPlaces": "Все vibe места",
+    "emptyCategory": "В этой категории пока нет мест"
+  },
+  "list": {
+    "_TODO": "Kazakh translation needs native-speaker review.",
+    "heading": "Самые интересные\nкатегории"
+  },
+  "category": {
+    "placeCount_one": "{{count}} заведение",
+    "placeCount_other": "{{count}} заведений"
+  },
+  "space": {
+    "_TODO": "Kazakh translations need native-speaker review.",
+    "description": "Описание",
+    "whatInside": "Что внутри:",
+    "route": "Маршрут",
+    "call": "Позвонить",
+    "share": "Поделиться"
+  }
+}
