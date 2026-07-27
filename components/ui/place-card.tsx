@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { images } from "@/lib/images";
 import type { ImageKey } from "@/lib/mock-data";
@@ -47,9 +48,10 @@ export function PlaceCard({
       {imageSource ? (
         <Image
           accessibilityIgnoresInvertColors
-          className="absolute inset-0 h-full w-full"
-          resizeMode="cover"
+          contentFit="cover"
+          recyclingKey={`${imageKey}-${title}`}
           source={imageSource}
+          style={styles.image}
         />
       ) : (
         <View
@@ -82,10 +84,11 @@ export function PlaceCard({
           bottom: 0,
           left: 0,
           height: 106,
+          zIndex: 1,
         }}
       />
 
-      <View className="flex-1 p-2">
+      <View className="flex-1 p-2" style={styles.content}>
         {tag ? (
           <View className="self-start rounded-md bg-accentOrange px-[9px] py-1.5">
             <Text className="font-sans-bold text-xs text-white">{tag}</Text>
@@ -110,3 +113,17 @@ export function PlaceCard({
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  image: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 0,
+  },
+  content: {
+    zIndex: 2,
+  },
+});

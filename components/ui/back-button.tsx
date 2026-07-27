@@ -12,11 +12,10 @@ export function BackButton({ onPress }: BackButtonProps) {
     <Pressable
       accessibilityLabel="Back"
       accessibilityRole="button"
-      className="h-9 w-9 items-center justify-center rounded-full bg-darkSurface"
-      hitSlop={8}
+      className="h-11 w-11 items-center justify-center rounded-full bg-darkSurface"
       onPress={onPress}
     >
-      <Ionicons color={colors.white} name="chevron-back" size={22} />
+      <Ionicons color={colors.white} name="chevron-back" size={24} />
     </Pressable>
   );
 }

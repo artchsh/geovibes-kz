@@ -1,23 +1,26 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { onboardingPhone } from "@/lib/images";
+import { useAppState } from "@/lib/app-state";
 import { colors, fonts } from "@/theme";
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
+  const { completeOnboarding } = useAppState();
   const tagline = t("app.tagline").replace(/\. /g, ".\n");
 
-  const enterApp = () => {
-    // TODO: first-run gating (AsyncStorage hasSeenOnboarding) later
+  const enterApp = async () => {
+    await completeOnboarding();
     router.replace("/(tabs)");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 overflow-hidden bg-white" edges={["top"]}>
       <View className="flex-1 px-4 pt-3">
         <View className="flex-row items-center gap-1">
           <View className="h-8 w-8 rounded-lg bg-primary" />
@@ -57,7 +60,7 @@ export default function OnboardingScreen() {
             accessibilityLabel={t("onboarding.cta")}
             accessibilityRole="button"
             className="flex-row items-center gap-1 rounded-xl bg-primary px-2.5 py-2 active:opacity-80"
-            onPress={enterApp}
+            onPress={() => void enterApp()}
           >
             <Text
               className="text-white"
@@ -79,7 +82,7 @@ export default function OnboardingScreen() {
             style={{ left: -72, top: 226, zIndex: 0 }}
           />
           <Image
-            resizeMode="contain"
+            contentFit="contain"
             source={onboardingPhone}
             style={{
               height: 690,

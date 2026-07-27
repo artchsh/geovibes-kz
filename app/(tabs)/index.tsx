@@ -29,7 +29,7 @@ export default function HomeScreen() {
           <ScreenHeader titleLines={["Лучшие Вайб", "Места!"]} />
 
           <SearchBar
-            onPress={() => undefined}
+            onPress={() => router.push("/search")}
             placeholder={t("home.searchPlaceholder")}
           />
 

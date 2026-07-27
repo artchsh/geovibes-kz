@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { Pressable, Text, View } from "react-native";
 
 import { images } from "@/lib/images";
 import type { ImageKey } from "@/lib/mock-data";
@@ -45,8 +46,10 @@ export function CategoryCard({
           <Image
             accessibilityIgnoresInvertColors
             className="h-full w-full"
-            resizeMode="cover"
+            contentFit="cover"
+            recyclingKey={imageKey}
             source={imageSource}
+            style={{ height: "100%", width: "100%" }}
           />
         ) : (
           <View className="h-full w-full items-center justify-center">

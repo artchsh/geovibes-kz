@@ -30,6 +30,7 @@ export type CategoryPlace = Omit<Place, "categoryId"> & {
 };
 
 export type CategoryDetail = {
+  id: string;
   name: string;
   subtitle: string;
   count: number;
@@ -38,12 +39,16 @@ export type CategoryDetail = {
 };
 
 export type SpaceDetail = {
+  id: string;
   name: string;
   rating: number;
   address: string;
   hours: string;
   categoryTag: string;
   description: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
   gallery: ImageKey[];
   inside: Place[];
 };
@@ -198,45 +203,99 @@ export const places: Place[] = [
   },
 ];
 
-export const categoryDetail: CategoryDetail = {
-  name: "Коктейли",
-  subtitle: "Авторские напитки и не только",
-  count: 8,
-  imageKey: "cocktails",
-  places: [
-    {
-      id: "love-cooperative",
-      title: 'Кооператив "Любовь"',
-      subtitle: "Место для отдыха, работы и творчества.",
-      rating: 4.8,
-      tag: "ПОПУЛЯРНОЕ",
-      imageKey: "cooperative",
-    },
-    {
-      id: "warm-evening",
-      title: "Тёплый вечер",
-      subtitle: "Коктейльный бар с видом на город.",
-      rating: 4.8,
-      imageKey: "operation",
-    },
-    {
-      id: "forma-bar",
-      title: "Форма",
-      subtitle: "Авторские коктейли и музыка до позднего вечера.",
-      rating: 4.7,
-      imageKey: "cooperative",
-    },
-  ],
+const placeRatings: Record<string, number> = {
+  "1": 4.9,
+  "2": 4.8,
+  "3": 4.7,
+  "4": 4.8,
+  "5": 4.6,
+  "6": 4.7,
+  "7": 4.9,
+  "8": 4.6,
+  "9": 4.8,
+  "10": 4.7,
+  "11": 4.6,
+  "12": 4.8,
+  "13": 4.9,
+  "14": 4.7,
 };
 
-export const spaceDetail: SpaceDetail = {
-  name: 'Кооператив "Любовь"',
-  rating: 4.9,
-  address: "Ул. Панфилова, 15",
-  hours: "Открыто до 23:00",
-  categoryTag: "ТВОРЧЕСКОЕ ПРОСТРАНСТВО",
-  description:
-    "Уютное пространство для отдыха, работы и творчества: коворкинг, лекции и локальные бренды под одной крышей в самом сердце города.",
-  gallery: ["operation", "cooperative", "rooftop"],
-  inside: [places[0], places[2]],
+const venueLocations: Record<
+  string,
+  { address: string; latitude: number; longitude: number; phone: string }
+> = {
+  "1": {
+    address: "Ул. Панфилова, 15",
+    latitude: 43.2567,
+    longitude: 76.9456,
+    phone: "+7 727 000 00 01",
+  },
+  "2": {
+    address: "Проспект Достык, 40",
+    latitude: 43.2445,
+    longitude: 76.9568,
+    phone: "+7 727 000 00 02",
+  },
 };
+
+const defaultLocation = {
+  address: "Алматы, Казахстан",
+  latitude: 43.2389,
+  longitude: 76.8897,
+  phone: "+7 727 000 00 00",
+};
+
+export function getCategoryDetail(id: string): CategoryDetail | undefined {
+  const category = categories.find((item) => item.id === id);
+  if (!category) return undefined;
+
+  const categoryPlaces = places
+    .filter((place) => place.categoryId === id)
+    .map(({ categoryId: _categoryId, ...place }) => ({
+      ...place,
+      rating: placeRatings[place.id] ?? 4.7,
+    }));
+
+  return {
+    id: category.id,
+    name: category.label,
+    subtitle: category.tagline,
+    count: categoryPlaces.length,
+    imageKey: category.imageKey,
+    places: categoryPlaces,
+  };
+}
+
+export function getSpaceDetail(id: string): SpaceDetail | undefined {
+  const place = places.find((item) => item.id === id);
+  if (!place) return undefined;
+
+  const category = categories.find((item) => item.id === place.categoryId);
+  const location = venueLocations[id] ?? defaultLocation;
+  const gallery = Array.from(
+    new Set<ImageKey>([
+      place.imageKey,
+      category?.imageKey ?? "operation",
+      "rooftop",
+    ]),
+  );
+
+  return {
+    id: place.id,
+    name: place.title,
+    rating: placeRatings[id] ?? 4.7,
+    address: location.address,
+    hours: "Открыто до 23:00",
+    categoryTag: category?.label.toUpperCase() ?? "VIBE МЕСТО",
+    description: place.subtitle,
+    phone: location.phone,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    gallery,
+    inside: places
+      .filter(
+        (item) => item.categoryId === place.categoryId && item.id !== place.id,
+      )
+      .slice(0, 2),
+  };
+}

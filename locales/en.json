@@ -22,14 +22,58 @@
     "heading": "The most interesting\ncategories"
   },
   "category": {
+    "notFound": "Category not found",
     "placeCount_one": "{{count}} place",
     "placeCount_other": "{{count}} places"
   },
   "space": {
+    "notFound": "Venue not found",
     "description": "Description",
     "whatInside": "What's inside:",
     "route": "Directions",
     "call": "Call",
     "share": "Share"
+  },
+  "search": {
+    "heading": "Find a place",
+    "empty": "No places found"
+  },
+  "profile": {
+    "title": "My profile",
+    "passport": "VIBE PASSPORT",
+    "city": "Almaty",
+    "status": "LOCAL EXPLORER",
+    "savedStat": "saved",
+    "categoryStat": "categories",
+    "savedTitle": "My places",
+    "savedSubtitle": "Everywhere you want to return",
+    "emptyTitle": "Your places will live here",
+    "emptyBody": "Save interesting places so they are easy to find before your next outing.",
+    "discover": "Find a place",
+    "localNote": "Your collection is stored only on this device. Accounts and sync are coming later."
+  },
+  "settings": {
+    "title": "Settings",
+    "languageTitle": "App language",
+    "placeTitle": "Your city",
+    "cityLabel": "Almaty",
+    "cityDescription": "GeoVibes currently operates only here",
+    "onlyCity": "PRIMARY",
+    "dataTitle": "Data on this device",
+    "savedLabel": "Saved places",
+    "savedDescription": "Saved: {{count}}",
+    "clearSaved": "Clear saved places",
+    "clearConfirmTitle": "Remove all saved places?",
+    "clearConfirmBody": "Your collection cannot be restored after removal.",
+    "cancel": "Cancel",
+    "clearAction": "Remove",
+    "contactTitle": "Contact us",
+    "suggestPlace": "Suggest a place",
+    "suggestDescription": "Tell us about a place worth adding",
+    "suggestSubject": "Suggest a place for GeoVibes",
+    "feedback": "Message the team",
+    "feedbackSubject": "GeoVibes feedback",
+    "about": "A curated guide to Almaty. No paid rankings or random recommendations.",
+    "version": "Version {{version}}"
   }
 }

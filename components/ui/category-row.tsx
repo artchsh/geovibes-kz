@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { Pressable, Text, View } from "react-native";
 
 import { images } from "@/lib/images";
 import type { ImageKey } from "@/lib/mock-data";
@@ -29,8 +30,10 @@ export function CategoryRow({
       <Image
         accessibilityIgnoresInvertColors
         className="h-12 w-12 rounded-xl"
-        resizeMode="cover"
+        contentFit="cover"
+        recyclingKey={imageKey}
         source={images[imageKey]}
+        style={{ height: 48, width: 48 }}
       />
 
       <View className="flex-1">

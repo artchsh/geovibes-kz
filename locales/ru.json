@@ -22,16 +22,60 @@
     "heading": "Самые интересные\nкатегории"
   },
   "category": {
+    "notFound": "Категория не найдена",
     "placeCount_one": "{{count}} заведение",
     "placeCount_few": "{{count}} заведения",
     "placeCount_many": "{{count}} заведений",
     "placeCount_other": "{{count}} заведений"
   },
   "space": {
+    "notFound": "Место не найдено",
     "description": "Описание",
     "whatInside": "Что внутри:",
     "route": "Маршрут",
     "call": "Позвонить",
     "share": "Поделиться"
+  },
+  "search": {
+    "heading": "Поиск мест",
+    "empty": "Ничего не найдено"
+  },
+  "profile": {
+    "title": "Мой профиль",
+    "passport": "ВАЙБ-ПАСПОРТ",
+    "city": "Алматы",
+    "status": "ЛОКАЛЬНЫЙ ИССЛЕДОВАТЕЛЬ",
+    "savedStat": "сохранено",
+    "categoryStat": "категории",
+    "savedTitle": "Мои места",
+    "savedSubtitle": "Всё, куда хочется вернуться",
+    "emptyTitle": "Здесь будут ваши места",
+    "emptyBody": "Сохраняйте интересные места, чтобы быстро найти их перед следующим выходом.",
+    "discover": "Найти место",
+    "localNote": "Коллекция хранится только на этом устройстве. Аккаунт и синхронизация появятся позже."
+  },
+  "settings": {
+    "title": "Настройки",
+    "languageTitle": "Язык приложения",
+    "placeTitle": "Ваш город",
+    "cityLabel": "Алматы",
+    "cityDescription": "Сейчас GeoVibes работает только здесь",
+    "onlyCity": "ОСНОВНОЙ",
+    "dataTitle": "Данные на устройстве",
+    "savedLabel": "Сохранённые места",
+    "savedDescription": "Сохранено: {{count}}",
+    "clearSaved": "Очистить сохранённые",
+    "clearConfirmTitle": "Удалить все сохранённые места?",
+    "clearConfirmBody": "Вернуть коллекцию после удаления не получится.",
+    "cancel": "Отмена",
+    "clearAction": "Удалить",
+    "contactTitle": "Связаться с нами",
+    "suggestPlace": "Предложить место",
+    "suggestDescription": "Расскажите о месте, которое стоит добавить",
+    "suggestSubject": "Предложить место для GeoVibes",
+    "feedback": "Написать команде",
+    "feedbackSubject": "Обратная связь о GeoVibes",
+    "about": "Кураторский гид по местам Алматы. Без платных рейтингов и случайных рекомендаций.",
+    "version": "Версия {{version}}"
   }
 }

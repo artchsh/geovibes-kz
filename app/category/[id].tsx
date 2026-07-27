@@ -6,15 +6,26 @@ import { useTranslation } from "react-i18next";
 
 import { BackButton } from "@/components/ui/back-button";
 import { PlaceCardTall } from "@/components/ui/place-card-tall";
-import { categoryDetail } from "@/lib/mock-data";
+import { getCategoryDetail } from "@/lib/mock-data";
 import { colors } from "@/theme";
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const categoryDetail = getCategoryDetail(id);
 
-  // TODO: Look up the category by id when category data comes from the backend.
-  void id;
+  if (!categoryDetail) {
+    return (
+      <SafeAreaView className="flex-1 bg-white px-4 pt-3" edges={["top"]}>
+        <BackButton onPress={() => router.back()} />
+        <View className="flex-1 items-center justify-center pb-16">
+          <Text className="font-display text-3xl text-black">
+            {t("category.notFound")}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>

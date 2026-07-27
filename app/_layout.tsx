@@ -19,6 +19,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
 import { colors } from "@/theme";
+import { AppStateProvider, useAppState } from "@/lib/app-state";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -37,20 +38,27 @@ export default function RootLayout() {
   const fontsLoaded = interLoaded && oswaldLoaded;
   const fontError = interError ?? oswaldError;
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      void SplashScreen.hideAsync();
-    }
-  }, [fontError, fontsLoaded]);
+  return (
+    <AppStateProvider>
+      <AppNavigator fontsReady={fontsLoaded || Boolean(fontError)} />
+    </AppStateProvider>
+  );
+}
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+function AppNavigator({ fontsReady }: { fontsReady: boolean }) {
+  const { hasSeenOnboarding, ready } = useAppState();
+
+  useEffect(() => {
+    if (fontsReady && ready) void SplashScreen.hideAsync();
+  }, [fontsReady, ready]);
+
+  if (!fontsReady || !ready) return null;
 
   return (
     <>
       <StatusBar style="dark" />
       <Stack
+        initialRouteName={hasSeenOnboarding ? "(tabs)" : "onboarding"}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
@@ -59,6 +67,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="category/[id]" />
         <Stack.Screen name="space/[id]" />
+        <Stack.Screen name="search" />
         <Stack.Screen name="onboarding" />
       </Stack>
     </>

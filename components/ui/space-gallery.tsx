@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Image } from "expo-image";
+import { Pressable, View } from "react-native";
 
 import { Tag } from "@/components/ui/tag";
 import { images } from "@/lib/images";
@@ -10,14 +11,17 @@ import { colors } from "@/theme";
 type SpaceGalleryProps = {
   imageKeys: ImageKey[];
   categoryLabel: string;
+  isSaved: boolean;
+  onToggleSaved: () => void;
 };
 
 export function SpaceGallery({
   imageKeys,
   categoryLabel,
+  isSaved,
+  onToggleSaved,
 }: SpaceGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isSaved, setIsSaved] = useState(false);
   const hasMultipleImages = imageKeys.length > 1;
 
   const changeImage = (offset: number) => {
@@ -35,8 +39,10 @@ export function SpaceGallery({
       <Image
         accessibilityIgnoresInvertColors
         className="h-full w-full"
-        resizeMode="cover"
+        contentFit="cover"
+        recyclingKey={imageKeys[currentIndex]}
         source={images[imageKeys[currentIndex]]}
+        style={{ height: "100%", width: "100%" }}
       />
 
       <View className="absolute left-2 top-2">
@@ -46,14 +52,14 @@ export function SpaceGallery({
       <Pressable
         accessibilityLabel={isSaved ? "Remove from saved" : "Save venue"}
         accessibilityRole="button"
-        className="absolute right-2 top-2 h-10 w-10 items-center justify-center rounded-full bg-darkSurface"
+        className="absolute right-3 top-3 h-11 w-11 items-center justify-center rounded-full bg-darkSurface"
         hitSlop={6}
-        onPress={() => setIsSaved((saved) => !saved)}
+        onPress={onToggleSaved}
       >
         <Ionicons
           color={colors.white}
           name={isSaved ? "heart" : "heart-outline"}
-          size={23}
+          size={24}
         />
       </Pressable>
 

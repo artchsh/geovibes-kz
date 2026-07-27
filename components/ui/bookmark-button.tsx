@@ -18,14 +18,13 @@ export function BookmarkButton({
       accessibilityLabel={saved ? "Remove bookmark" : "Save bookmark"}
       accessibilityRole="button"
       accessibilityState={{ selected: saved }}
-      className="h-7 w-7 items-center justify-center rounded-full bg-darkSurface"
-      hitSlop={8}
+      className="h-11 w-11 items-center justify-center rounded-full bg-darkSurface"
       onPress={onPress}
     >
       <Ionicons
         color={colors.white}
         name={saved ? "bookmark" : "bookmark-outline"}
-        size={15}
+        size={21}
       />
     </Pressable>
   );

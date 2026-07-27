@@ -1,5 +1,7 @@
+import * as Linking from "expo-linking";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { Image, ScrollView, Share, Text, View } from "react-native";
+import { ScrollView, Share, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -8,25 +10,46 @@ import { BackButton } from "@/components/ui/back-button";
 import { PlaceCard } from "@/components/ui/place-card";
 import { SpaceGallery } from "@/components/ui/space-gallery";
 import { logoHeart } from "@/lib/images";
-import { spaceDetail } from "@/lib/mock-data";
+import { useAppState } from "@/lib/app-state";
+import { getSpaceDetail } from "@/lib/mock-data";
 
 export default function SpaceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const { isVenueSaved, toggleSavedVenue } = useAppState();
+  const spaceDetail = getSpaceDetail(id);
 
-  // TODO: Look up the space by id when space data comes from the backend.
-  void id;
+  if (!spaceDetail) {
+    return (
+      <SafeAreaView className="flex-1 bg-white px-4 pt-3" edges={["top"]}>
+        <BackButton onPress={() => router.back()} />
+        <View className="flex-1 items-center justify-center pb-16">
+          <Text className="font-display text-3xl text-black">
+            {t("space.notFound")}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const openRoute = () => {
-    // TODO: deep link to Yandex Maps
+    const point = `${spaceDetail.longitude},${spaceDetail.latitude}`;
+    void Linking.openURL(
+      `https://yandex.com/maps/?pt=${point}&z=16&l=map`,
+    );
   };
 
   const callVenue = () => {
-    // TODO: tel: link
+    void Linking.openURL(`tel:${spaceDetail.phone.replace(/[^+\d]/g, "")}`);
   };
 
   const shareVenue = () => {
-    void Share.share({ message: spaceDetail.name });
+    const url = Linking.createURL(`/space/${spaceDetail.id}`);
+    void Share.share({
+      message: `${spaceDetail.name}\n${spaceDetail.address}\n${url}`,
+      title: spaceDetail.name,
+      url,
+    });
   };
 
   return (
@@ -54,8 +77,9 @@ export default function SpaceScreen() {
             <Image
               accessibilityIgnoresInvertColors
               className="h-16 w-16 rounded-xl"
-              resizeMode="contain"
+              contentFit="contain"
               source={logoHeart}
+              style={{ height: 64, width: 64 }}
             />
           </View>
 
@@ -63,6 +87,8 @@ export default function SpaceScreen() {
             <SpaceGallery
               categoryLabel={spaceDetail.categoryTag}
               imageKeys={spaceDetail.gallery}
+              isSaved={isVenueSaved(spaceDetail.id)}
+              onToggleSaved={() => toggleSavedVenue(spaceDetail.id)}
             />
           </View>
 
@@ -94,7 +120,7 @@ export default function SpaceScreen() {
                 <PlaceCard
                   {...place}
                   key={place.id}
-                  onPress={() => undefined}
+                  onPress={() => router.push(`/space/${place.id}`)}
                   variant="featured"
                 />
               ))}
