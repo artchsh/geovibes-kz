@@ -8,6 +8,7 @@ export type TranslationMap<T> = Partial<Record<SupportedLocale, T | null>>;
 
 export type PublishOptions = {
   acknowledgeMissingLocales: boolean;
+  expectedDraftRevisionId?: string;
 };
 
 export type MissingTranslationWarning = {
@@ -27,9 +28,8 @@ export function publicationWarnings(
   locales: readonly SupportedLocale[],
   options: PublishOptions,
 ): MissingTranslationWarning[] {
-  if (locales.length !== 1) return [];
-
   const missingLocales = SUPPORTED_LOCALES.filter((locale) => !locales.includes(locale));
+  if (missingLocales.length === 0) return [];
   if (!options.acknowledgeMissingLocales) {
     throw new AppError("MISSING_LOCALES_CONFIRMATION_REQUIRED", 409);
   }

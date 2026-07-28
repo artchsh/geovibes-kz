@@ -12,6 +12,11 @@ import {
   type AuthenticatedUser,
 } from "@/lib/auth/authorization";
 import {
+  catalogTransaction,
+  requireReferenceUuid,
+  requireTargetUuid,
+} from "@/lib/catalog/errors";
+import {
   publicationWarnings,
   safeAuditMetadata,
   validatePublicationTranslations,
@@ -82,6 +87,23 @@ async function insertTranslations(
   if (rows.length > 0) await tx.insert(categoryTranslations).values(rows);
 }
 
+type CatalogTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function validateCoverMedia(
+  tx: CatalogTransaction,
+  mediaId: string | null,
+): Promise<void> {
+  if (mediaId === null) return;
+  requireReferenceUuid(mediaId, "MEDIA_REFERENCE_INVALID");
+  const referenced = await tx.select({ id: media.id }).from(media).where(and(
+    eq(media.id, mediaId),
+    isNull(media.deletedAt),
+  )).for("share");
+  if (referenced.length !== 1) {
+    throw new AppError("MEDIA_REFERENCE_INVALID", 422);
+  }
+}
+
 export async function createCategoryDraft(
   actor: AuthenticatedUser | null,
   input: CreateCategoryDraftInput,
@@ -89,7 +111,8 @@ export async function createCategoryDraft(
   const authorized = requireRole(actor, "editor");
   const slug = normalizeSlug(input.slug);
 
-  return db.transaction(async (tx) => {
+  return catalogTransaction(() => db.transaction(async (tx) => {
+    await validateCoverMedia(tx, input.coverMediaId);
     const [identity] = await tx.insert(categories).values({
       slug,
       legacyId: input.legacyId ?? null,
@@ -119,7 +142,7 @@ export async function createCategoryDraft(
       status: "draft",
       draftRevisionId: revision.id,
     };
-  });
+  }));
 }
 
 export async function updateCategoryDraft(
@@ -129,10 +152,20 @@ export async function updateCategoryDraft(
 ): Promise<CategoryDraftResult> {
   const authorized = requireRole(actor, "editor");
 
-  return db.transaction(async (tx) => {
+  requireTargetUuid(categoryId, "CATEGORY_NOT_FOUND");
+  return catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(categories)
       .where(eq(categories.id, categoryId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("CATEGORY_NOT_FOUND", 404);
+    if (identity.publishedRevisionId) {
+      const slugChanged = input.slug !== undefined
+        && normalizeSlug(input.slug) !== identity.slug;
+      const legacyIdChanged = input.legacyId !== undefined
+        && input.legacyId !== identity.legacyId;
+      if (slugChanged || legacyIdChanged) {
+        throw new AppError("PUBLISHED_IDENTITY_IMMUTABLE", 409);
+      }
+    }
     if (identity.status === "archived") throw new AppError("CONTENT_ARCHIVED", 409);
     if (identity.draftRevisionId === identity.publishedRevisionId) {
       throw new AppError("IMMUTABLE_PUBLISHED_REVISION", 409);
@@ -145,6 +178,9 @@ export async function updateCategoryDraft(
     if (!revision) throw new AppError("CATEGORY_DRAFT_NOT_FOUND", 409);
 
     const patch: Partial<CategoryRevisionInsert> = { updatedAt: new Date() };
+    if (input.coverMediaId !== undefined) {
+      await validateCoverMedia(tx, input.coverMediaId);
+    }
     if ("primaryLocale" in input) patch.primaryLocale = input.primaryLocale;
     if ("displayOrder" in input) patch.displayOrder = input.displayOrder;
     if ("coverMediaId" in input) patch.coverMediaId = input.coverMediaId;
@@ -179,7 +215,7 @@ export async function updateCategoryDraft(
       status: identity.status,
       draftRevisionId: revision.id,
     };
-  });
+  }));
 }
 
 export async function publishCategory(
@@ -189,10 +225,15 @@ export async function publishCategory(
 ): Promise<PublishResult> {
   const authorized = requireRole(actor, "editor");
 
-  return db.transaction(async (tx) => {
+  requireTargetUuid(categoryId, "CATEGORY_NOT_FOUND");
+  return catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(categories)
       .where(eq(categories.id, categoryId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("CATEGORY_NOT_FOUND", 404);
+    if (options.expectedDraftRevisionId
+      && options.expectedDraftRevisionId !== identity.draftRevisionId) {
+      throw new AppError("STALE_DRAFT_REVISION", 409);
+    }
     if (identity.status === "archived") throw new AppError("CONTENT_ARCHIVED", 409);
     if (identity.draftRevisionId === identity.publishedRevisionId) {
       throw new AppError("IMMUTABLE_PUBLISHED_REVISION", 409);
@@ -268,7 +309,7 @@ export async function publishCategory(
       draftRevisionId: nextDraft.id,
       warnings,
     };
-  });
+  }));
 }
 
 export async function archiveCategory(
@@ -276,7 +317,8 @@ export async function archiveCategory(
   categoryId: string,
 ): Promise<void> {
   const authorized = requireRole(actor, "editor");
-  await db.transaction(async (tx) => {
+  requireTargetUuid(categoryId, "CATEGORY_NOT_FOUND");
+  await catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(categories)
       .where(eq(categories.id, categoryId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("CATEGORY_NOT_FOUND", 404);
@@ -299,7 +341,7 @@ export async function archiveCategory(
         status: "archived",
       }),
     });
-  });
+  }));
 }
 
 export async function restoreCategory(
@@ -307,7 +349,8 @@ export async function restoreCategory(
   categoryId: string,
 ): Promise<void> {
   const authorized = requireRole(actor, "editor");
-  await db.transaction(async (tx) => {
+  requireTargetUuid(categoryId, "CATEGORY_NOT_FOUND");
+  await catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(categories)
       .where(eq(categories.id, categoryId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("CATEGORY_NOT_FOUND", 404);
@@ -329,5 +372,5 @@ export async function restoreCategory(
         status: "draft",
       }),
     });
-  });
+  }));
 }

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   auditEvents,
@@ -14,6 +14,11 @@ import {
   requireRole,
   type AuthenticatedUser,
 } from "@/lib/auth/authorization";
+import {
+  catalogTransaction,
+  requireReferenceUuid,
+  requireTargetUuid,
+} from "@/lib/catalog/errors";
 import {
   publicationWarnings,
   safeAuditMetadata,
@@ -152,6 +157,64 @@ async function replaceMedia(
   }
 }
 
+type CatalogTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function validateCategoryAssignments(
+  tx: CatalogTransaction,
+  categoryIds: readonly string[],
+): Promise<void> {
+  if (new Set(categoryIds).size !== categoryIds.length) {
+    throw new AppError("DUPLICATE_CATEGORY_ASSIGNMENT", 422);
+  }
+  for (const categoryId of categoryIds) {
+    requireReferenceUuid(categoryId, "CATEGORY_REFERENCE_INVALID");
+  }
+  if (categoryIds.length === 0) return;
+
+  const referenced = await tx.select({
+    id: categories.id,
+    status: categories.status,
+  }).from(categories).where(inArray(categories.id, [...categoryIds])).for("share");
+  if (referenced.length !== categoryIds.length) {
+    throw new AppError("CATEGORY_REFERENCE_INVALID", 422);
+  }
+  if (referenced.some((category) => category.status === "archived")) {
+    throw new AppError("ARCHIVED_CATEGORY_REFERENCED", 422);
+  }
+}
+
+async function validateMediaAssignments(
+  tx: CatalogTransaction,
+  assignments: readonly PlaceMediaInput[],
+): Promise<void> {
+  const mediaIds = assignments.map((assignment) => assignment.mediaId);
+  if (new Set(mediaIds).size !== mediaIds.length) {
+    throw new AppError("DUPLICATE_MEDIA_ASSIGNMENT", 422);
+  }
+  const sortOrders = assignments.map((assignment) => assignment.sortOrder);
+  if (new Set(sortOrders).size !== sortOrders.length) {
+    throw new AppError("DUPLICATE_MEDIA_SORT_ORDER", 422);
+  }
+  if (sortOrders.some((order) => !Number.isInteger(order) || order < 0)) {
+    throw new AppError("INVALID_MEDIA_SORT_ORDER", 422);
+  }
+  if (assignments.filter((assignment) => assignment.isCover).length > 1) {
+    throw new AppError("MULTIPLE_COVER_MEDIA", 422);
+  }
+  for (const mediaId of mediaIds) {
+    requireReferenceUuid(mediaId, "MEDIA_REFERENCE_INVALID");
+  }
+  if (mediaIds.length === 0) return;
+
+  const referenced = await tx.select({ id: media.id }).from(media).where(and(
+    inArray(media.id, mediaIds),
+    isNull(media.deletedAt),
+  )).for("share");
+  if (referenced.length !== mediaIds.length) {
+    throw new AppError("MEDIA_REFERENCE_INVALID", 422);
+  }
+}
+
 export async function createPlaceDraft(
   actor: AuthenticatedUser | null,
   input: CreatePlaceDraftInput,
@@ -159,7 +222,9 @@ export async function createPlaceDraft(
   const authorized = requireRole(actor, "editor");
   const slug = normalizeSlug(input.slug);
 
-  return db.transaction(async (tx) => {
+  return catalogTransaction(() => db.transaction(async (tx) => {
+    await validateCategoryAssignments(tx, input.categoryIds);
+    await validateMediaAssignments(tx, input.media);
     const [identity] = await tx.insert(places).values({
       slug,
       legacyId: input.legacyId ?? null,
@@ -203,7 +268,7 @@ export async function createPlaceDraft(
       status: "draft",
       draftRevisionId: revision.id,
     };
-  });
+  }));
 }
 
 export async function updatePlaceDraft(
@@ -213,10 +278,20 @@ export async function updatePlaceDraft(
 ): Promise<PlaceDraftResult> {
   const authorized = requireRole(actor, "editor");
 
-  return db.transaction(async (tx) => {
+  requireTargetUuid(placeId, "PLACE_NOT_FOUND");
+  return catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(places)
       .where(eq(places.id, placeId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("PLACE_NOT_FOUND", 404);
+    if (identity.publishedRevisionId) {
+      const slugChanged = input.slug !== undefined
+        && normalizeSlug(input.slug) !== identity.slug;
+      const legacyIdChanged = input.legacyId !== undefined
+        && input.legacyId !== identity.legacyId;
+      if (slugChanged || legacyIdChanged) {
+        throw new AppError("PUBLISHED_IDENTITY_IMMUTABLE", 409);
+      }
+    }
     if (identity.status === "archived") throw new AppError("CONTENT_ARCHIVED", 409);
     if (identity.draftRevisionId === identity.publishedRevisionId) {
       throw new AppError("IMMUTABLE_PUBLISHED_REVISION", 409);
@@ -230,6 +305,8 @@ export async function updatePlaceDraft(
     if (!revision) throw new AppError("PLACE_DRAFT_NOT_FOUND", 409);
 
     const patch: Partial<PlaceRevisionInsert> = { updatedAt: new Date() };
+    if (input.categoryIds) await validateCategoryAssignments(tx, input.categoryIds);
+    if (input.media) await validateMediaAssignments(tx, input.media);
     if ("primaryLocale" in input) patch.primaryLocale = input.primaryLocale;
     if ("address" in input) patch.address = input.address;
     if ("district" in input) patch.district = input.district;
@@ -277,7 +354,7 @@ export async function updatePlaceDraft(
       status: identity.status,
       draftRevisionId: revision.id,
     };
-  });
+  }));
 }
 
 export async function publishPlace(
@@ -287,10 +364,15 @@ export async function publishPlace(
 ): Promise<PublishResult> {
   const authorized = requireRole(actor, "editor");
 
-  return db.transaction(async (tx) => {
+  requireTargetUuid(placeId, "PLACE_NOT_FOUND");
+  return catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(places)
       .where(eq(places.id, placeId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("PLACE_NOT_FOUND", 404);
+    if (options.expectedDraftRevisionId
+      && options.expectedDraftRevisionId !== identity.draftRevisionId) {
+      throw new AppError("STALE_DRAFT_REVISION", 409);
+    }
     if (identity.status === "archived") throw new AppError("CONTENT_ARCHIVED", 409);
     if (identity.draftRevisionId === identity.publishedRevisionId) {
       throw new AppError("IMMUTABLE_PUBLISHED_REVISION", 409);
@@ -321,11 +403,11 @@ export async function publishPlace(
     }).from(categories).where(inArray(
       categories.id,
       categoryAssignments.map((assignment) => assignment.categoryId),
-    ));
-    if (
-      referencedCategories.length !== categoryAssignments.length
-      || referencedCategories.some((category) => category.status === "archived")
-    ) {
+    )).for("share");
+    if (referencedCategories.length !== categoryAssignments.length) {
+      throw new AppError("CATEGORY_REFERENCE_INVALID", 422);
+    }
+    if (referencedCategories.some((category) => category.status === "archived")) {
       throw new AppError("ARCHIVED_CATEGORY_REFERENCED", 422);
     }
 
@@ -418,7 +500,7 @@ export async function publishPlace(
       draftRevisionId: nextDraft.id,
       warnings,
     };
-  });
+  }));
 }
 
 export async function archivePlace(
@@ -426,7 +508,8 @@ export async function archivePlace(
   placeId: string,
 ): Promise<void> {
   const authorized = requireRole(actor, "editor");
-  await db.transaction(async (tx) => {
+  requireTargetUuid(placeId, "PLACE_NOT_FOUND");
+  await catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(places)
       .where(eq(places.id, placeId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("PLACE_NOT_FOUND", 404);
@@ -449,7 +532,7 @@ export async function archivePlace(
         status: "archived",
       }),
     });
-  });
+  }));
 }
 
 export async function restorePlace(
@@ -457,7 +540,8 @@ export async function restorePlace(
   placeId: string,
 ): Promise<void> {
   const authorized = requireRole(actor, "editor");
-  await db.transaction(async (tx) => {
+  requireTargetUuid(placeId, "PLACE_NOT_FOUND");
+  await catalogTransaction(() => db.transaction(async (tx) => {
     const [identity] = await tx.select().from(places)
       .where(eq(places.id, placeId)).for("update");
     if (!identity?.draftRevisionId) throw new AppError("PLACE_NOT_FOUND", 404);
@@ -479,5 +563,5 @@ export async function restorePlace(
         status: "draft",
       }),
     });
-  });
+  }));
 }

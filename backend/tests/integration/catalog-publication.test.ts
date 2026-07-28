@@ -176,7 +176,7 @@ describe("catalog publication services", () => {
     }]);
   });
 
-  it("publishes two human-authored languages without a warning", async () => {
+  it("requires acknowledgement for two languages and reports the missing locale", async () => {
     const editor = await user();
     const category = await categoryFixture(editor);
     const place = await placeFixture(editor, category.id, {
@@ -185,7 +185,13 @@ describe("catalog publication services", () => {
 
     await expect(publishPlace(editor, place.id, {
       acknowledgeMissingLocales: false,
-    })).resolves.toMatchObject({ warnings: [] });
+    })).rejects.toMatchObject({ code: "MISSING_LOCALES_CONFIRMATION_REQUIRED" });
+
+    await expect(publishPlace(editor, place.id, {
+      acknowledgeMissingLocales: true,
+    })).resolves.toMatchObject({
+      warnings: [{ code: "MISSING_TRANSLATIONS", missingLocales: ["en"] }],
+    });
   });
 
   it("validates primary locale, coordinates, categories, and place cover media", async () => {
@@ -239,13 +245,10 @@ describe("catalog publication services", () => {
 
     const deletedCoverId = await image();
     await db.update(media).set({ deletedAt: new Date() }).where(eq(media.id, deletedCoverId));
-    const deletedCover = await categoryFixture(editor, {
+    await expect(categoryFixture(editor, {
       coverMediaId: deletedCoverId,
       publish: false,
-    });
-    await expect(publishCategory(editor, deletedCover.id, {
-      acknowledgeMissingLocales: true,
-    })).rejects.toMatchObject({ code: "CATEGORY_COVER_REQUIRED" });
+    })).rejects.toMatchObject({ code: "MEDIA_REFERENCE_INVALID" });
   });
 
   it("archives without deleting revisions and restores to editable non-public draft", async () => {
@@ -321,7 +324,7 @@ describe("catalog publication services", () => {
     const editor = await user();
     const category = await categoryFixture(editor, { publish: false });
     await updateCategoryDraft(editor, category.id, { displayOrder: 2 });
-    await publishCategory(editor, category.id, { acknowledgeMissingLocales: false });
+    await publishCategory(editor, category.id, { acknowledgeMissingLocales: true });
     await archiveCategory(editor, category.id);
     await restoreCategory(editor, category.id);
 
@@ -377,7 +380,7 @@ describe("catalog publication services", () => {
       ));
     expect(oldTranslation.name).toBe("Category");
 
-    await publishCategory(editor, category.id, { acknowledgeMissingLocales: false });
+    await publishCategory(editor, category.id, { acknowledgeMissingLocales: true });
     const [secondIdentity] = await db.select().from(categories)
       .where(eq(categories.id, category.id));
     expect(secondIdentity.publishedRevisionId).not.toBe(firstIdentity.publishedRevisionId);
