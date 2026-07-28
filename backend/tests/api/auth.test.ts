@@ -8,7 +8,12 @@ import { resetTestDatabase } from "@/tests/setup/database";
 
 const WEB_ORIGIN = "http://localhost:3001";
 const NATIVE_ORIGIN = "geovibes://";
-const NATIVE_HEADER = { "x-geovibes-client": "native" };
+const PROXY_SECRET = "test-trusted-proxy-secret-at-least-32-characters";
+const NATIVE_HEADER = { "x-geovibes-client": "expo-native" };
+
+function trustedProxyHeaders(ipAddress: string): Record<string, string> {
+  return { "x-forwarded-for": ipAddress, "x-geovibes-proxy-secret": PROXY_SECRET };
+}
 
 function routeContext(action: string) {
   return { params: Promise.resolve({ action }) };
@@ -231,7 +236,7 @@ describe("authentication API", () => {
       response = await post("sign-in", {
         username: "limited",
         password: "wrong password",
-      }, { "x-forwarded-for": "198.51.100.10" });
+      }, trustedProxyHeaders("198.51.100.10"));
     }
     expect(response?.status).toBe(429);
     expect(response?.headers.get("retry-after")).toMatch(/^\d+$/);
@@ -239,7 +244,7 @@ describe("authentication API", () => {
     const otherIp = await post("sign-in", {
       username: "limited",
       password: "correct horse battery",
-    }, { "x-forwarded-for": "198.51.100.11" });
+    }, trustedProxyHeaders("198.51.100.11"));
     expect(otherIp.status).toBe(200);
   });
 

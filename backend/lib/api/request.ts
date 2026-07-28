@@ -1,6 +1,10 @@
 import type { AuthenticatedUser } from "@/lib/auth/authorization";
 import { readSession } from "@/lib/auth/session";
 import { ApiError } from "./errors";
+import { trustedClientIp } from "./client-ip";
+
+export { trustedClientIp } from "./client-ip";
+export { readJsonBody } from "./json-body";
 
 export const SESSION_COOKIE_NAME = "geovibes_session";
 export const NATIVE_CLIENT_HEADER = "x-geovibes-client";
@@ -22,7 +26,7 @@ function parseCookie(request: Request, name: string): string | null {
 }
 
 export function isNativeClient(request: Request): boolean {
-  return request.headers.get(NATIVE_CLIENT_HEADER) === "native";
+  return request.headers.get(NATIVE_CLIENT_HEADER) === "expo-native";
 }
 
 export function readSessionToken(request: Request): {
@@ -70,26 +74,8 @@ export function requestContext(request: Request): {
   ipAddress: string | null;
   userAgent: string | null;
 } {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const realIp = request.headers.get("x-real-ip")?.trim();
   return {
-    ipAddress: forwarded || realIp || null,
+    ipAddress: trustedClientIp(request.headers),
     userAgent: request.headers.get("user-agent"),
   };
-}
-
-export async function readJsonBody(request: Request): Promise<unknown> {
-  const contentType = request.headers.get("content-type")?.split(";")[0].trim();
-  if (contentType !== "application/json") {
-    throw new ApiError("INVALID_REQUEST", 400, "Request validation failed", {
-      body: "Content-Type must be application/json",
-    });
-  }
-  try {
-    return await request.json();
-  } catch {
-    throw new ApiError("INVALID_REQUEST", 400, "Request validation failed", {
-      body: "Body must contain valid JSON",
-    });
-  }
 }

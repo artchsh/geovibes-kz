@@ -33,4 +33,17 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ ...base, MOBILE_ORIGINS: "*" }))
       .toThrow(/MOBILE_ORIGINS/);
   });
+
+  it("allows an omitted trusted proxy secret and rejects a short one", () => {
+    const base = {
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/geovibes",
+      AUTH_SECRET: "development-only-auth-secret-with-at-least-32-characters",
+      APP_ORIGIN: "http://localhost:3001",
+      MOBILE_ORIGINS: "http://localhost:8081",
+    };
+
+    expect(parseEnv(base).TRUSTED_PROXY_SECRET).toBeUndefined();
+    expect(() => parseEnv({ ...base, TRUSTED_PROXY_SECRET: "too-short" }))
+      .toThrow(/TRUSTED_PROXY_SECRET/);
+  });
 });

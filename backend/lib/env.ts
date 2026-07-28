@@ -15,6 +15,10 @@ const envSchema = z.object({
     }
     return [...new Set(origins)];
   }),
+  TRUSTED_PROXY_SECRET: z.preprocess(
+    (value) => value === "" ? undefined : value,
+    z.string().min(32).optional(),
+  ),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   MEDIA_ROOT: z.string().min(1).default("./storage"),
   MAX_UPLOAD_BYTES: z.coerce.number().int().min(1).default(10_485_760),

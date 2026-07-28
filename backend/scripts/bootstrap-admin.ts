@@ -4,6 +4,9 @@ import { db } from "@/db/client";
 import { passwordCredentials, sessions, users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 import { normalizeUsername } from "@/lib/auth/username";
+import { consumeHiddenInputChunk } from "./hidden-input";
+
+export { consumeHiddenInputChunk } from "./hidden-input";
 
 export function parseBootstrapArgs(args: string[]): { username: string } {
   if (args.some((argument) =>
@@ -43,21 +46,15 @@ async function promptForHiddenPassword(): Promise<string> {
       process.stderr.write("\n");
     };
     const onData = (chunk: string) => {
-      if (chunk === "\u0003") {
-        cleanup();
+      const result = consumeHiddenInputChunk(password, chunk);
+      password = result.value;
+      if (result.outcome === "reading") return;
+      cleanup();
+      if (result.outcome === "cancelled") {
         reject(new Error("Bootstrap cancelled"));
         return;
       }
-      if (chunk === "\r" || chunk === "\n" || chunk === "\r\n") {
-        cleanup();
-        resolve(password);
-        return;
-      }
-      if (chunk === "\u0008" || chunk === "\u007f") {
-        password = password.slice(0, -1);
-        return;
-      }
-      password += chunk;
+      resolve(password);
     };
     input.on("data", onData);
   });

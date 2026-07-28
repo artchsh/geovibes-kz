@@ -562,7 +562,7 @@ Never include the session token in response JSON when a secure cookie is the sel
 Implement:
 
 ```bash
-npm run admin:bootstrap -- --username geovibes-admin
+npm run admin:bootstrap -- --username geovibes.admin
 ```
 
 Read the password from an interactive hidden prompt, refuse non-interactive plaintext password arguments, create or promote exactly one user, revoke existing sessions after promotion, and print only the user ID and username.

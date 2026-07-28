@@ -5,6 +5,7 @@ import { passwordCredentials, users } from "@/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, readSession } from "@/lib/auth/session";
 import {
+  consumeHiddenInputChunk,
   bootstrapAdmin,
   parseBootstrapArgs,
 } from "@/scripts/bootstrap-admin";
@@ -62,19 +63,30 @@ describe("admin bootstrap", () => {
   });
 
   it("refuses plaintext password arguments and accepts only a username", () => {
-    expect(parseBootstrapArgs(["--username", "safe-admin"])).toEqual({
-      username: "safe-admin",
+    expect(parseBootstrapArgs(["--username", "safe.admin"])).toEqual({
+      username: "safe.admin",
     });
     expect(() => parseBootstrapArgs([
       "--username",
-      "unsafe-admin",
+      "unsafe.admin",
       "--password",
       "visible secret",
     ])).toThrow(/plaintext password/i);
     expect(() => parseBootstrapArgs([
-      "--username=unsafe-admin",
+      "--username=unsafe.admin",
       "--password=visible-secret",
     ])).toThrow(/plaintext password/i);
+  });
+
+  it("processes pasted terminal chunks character by character without echoing", () => {
+    expect(consumeHiddenInputChunk("", "paste\u0008d\rignored")).toEqual({
+      outcome: "submitted",
+      value: "pastd",
+    });
+    expect(consumeHiddenInputChunk("started", "\u0003ignored")).toEqual({
+      outcome: "cancelled",
+      value: "started",
+    });
   });
 });
 
