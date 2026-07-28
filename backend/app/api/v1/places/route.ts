@@ -12,7 +12,12 @@ const querySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
     .max(128)
     .optional(),
-  query: z.string().trim().min(1).max(200).optional(),
+  query: z.string().trim().min(1).max(200)
+    .refine(
+      (value) => !/[\u0000-\u001f\u007f]/.test(value),
+      "Control characters are not allowed",
+    )
+    .optional(),
   cursor: z.string().min(1).max(2048).optional(),
   limit: z.string()
     .regex(/^\d+$/)

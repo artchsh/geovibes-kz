@@ -10,6 +10,7 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
+import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { db } from "@/db/client";
 import {
@@ -110,6 +111,42 @@ type PlacesCursor = z.infer<typeof cursorSchema>;
 const NULL_FEATURED_RANK = 2_147_483_647;
 const featuredSort = sql<number>`coalesce(${placeRevisions.featuredRank}, ${NULL_FEATURED_RANK})`;
 
+type PublicReadTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const publicCategoryIdentity = alias(categories, "public_category_identity");
+const publicCategoryRevision = alias(categoryRevisions, "public_category_revision");
+const publicCategoryTranslation = alias(categoryTranslations, "public_category_translation");
+const publicCategoryCover = alias(media, "public_category_cover");
+
+function validPublishedCategory(categoryId: AnyPgColumn): SQL {
+  return sql`exists (
+    select 1
+    from ${categories} as public_category_identity
+    inner join ${categoryRevisions} as public_category_revision
+      on ${publicCategoryRevision.id} = ${publicCategoryIdentity.publishedRevisionId}
+      and ${publicCategoryRevision.categoryId} = ${publicCategoryIdentity.id}
+    inner join ${media} as public_category_cover
+      on ${publicCategoryCover.id} = ${publicCategoryRevision.coverMediaId}
+      and ${publicCategoryCover.deletedAt} is null
+    where ${publicCategoryIdentity.id} = ${categoryId}
+      and ${publicCategoryIdentity.status} = 'published'
+      and exists (
+        select 1
+        from ${categoryTranslations} as public_category_translation
+        where ${publicCategoryTranslation.categoryRevisionId} = ${publicCategoryRevision.id}
+      )
+  )`;
+}
+
+function withPublicSnapshot<T>(
+  operation: (tx: PublicReadTransaction) => Promise<T>,
+): Promise<T> {
+  return db.transaction(operation, {
+    isolationLevel: "repeatable read",
+    accessMode: "read only",
+  });
+}
+
 function publicMediaUrl(id: string): string {
   return new URL(`/media/${id}`, env.APP_ORIGIN).toString();
 }
@@ -158,7 +195,8 @@ function decodeCursor(value: string, expected: ReturnType<typeof cursorShape>): 
   const suppliedSignature = Buffer.from(parts[1], "base64url");
   const expectedSignature = signCursorPayload(parts[0]);
   if (
-    suppliedSignature.length !== expectedSignature.length
+    suppliedSignature.toString("base64url") !== parts[1]
+    || suppliedSignature.length !== expectedSignature.length
     || !timingSafeEqual(suppliedSignature, expectedSignature)
   ) {
     return invalidCursor();
@@ -188,6 +226,17 @@ function escapeLike(value: string): string {
     .replace(/_/g, "!_");
 }
 
+function publicCoordinate(
+  value: string | null,
+  minimum: number,
+  maximum: number,
+): number {
+  const parsed = value === null ? Number.NaN : Number(value);
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error("Invalid coordinates escaped the public catalog predicate");
+  }
+  return parsed;
+}
 type PlaceIdentityRow = {
   id: string;
   legacyId: string | null;
@@ -246,6 +295,10 @@ function publishedPlaceConditions(): SQL[] {
         and ${placeRevisionMedia.isCover} = true
         and ${media.deletedAt} is null
     )`,
+    sql`${placeRevisions.latitude} is not null
+      and ${placeRevisions.latitude} between -90 and 90`,
+    sql`${placeRevisions.longitude} is not null
+      and ${placeRevisions.longitude} between -180 and 180`,
   ];
 }
 
@@ -255,12 +308,9 @@ function categoryFilter(slug: string): SQL {
     from ${placeRevisionCategories}
     inner join ${categories}
       on ${categories.id} = ${placeRevisionCategories.categoryId}
-    inner join ${categoryRevisions}
-      on ${categoryRevisions.id} = ${categories.publishedRevisionId}
-      and ${categoryRevisions.categoryId} = ${categories.id}
     where ${placeRevisionCategories.placeRevisionId} = ${placeRevisions.id}
-      and ${categories.status} = 'published'
       and ${categories.slug} = ${slug}
+      and ${validPublishedCategory(placeRevisionCategories.categoryId)}
   )`;
 }
 
@@ -303,12 +353,13 @@ function afterCursor(cursor: PlacesCursor): SQL {
 }
 
 async function hydratePlaces(
+  executor: PublicReadTransaction,
   rows: PlaceIdentityRow[],
   requestedLanguage: SupportedLocale,
 ): Promise<PublicPlace[]> {
   if (rows.length === 0) return [];
   const revisionIds = rows.map((row) => row.revisionId);
-  const translationRows = await db.select({
+  const translationRows = await executor.select({
     revisionId: placeTranslations.placeRevisionId,
     locale: placeTranslations.locale,
     name: placeTranslations.name,
@@ -318,26 +369,21 @@ async function hydratePlaces(
     placeTranslations.placeRevisionId,
     revisionIds,
   ));
-  const categoryRows = await db.select({
+  const categoryRows = await executor.select({
     revisionId: placeRevisionCategories.placeRevisionId,
     categoryId: placeRevisionCategories.categoryId,
     sortOrder: placeRevisionCategories.sortOrder,
   }).from(placeRevisionCategories)
-    .innerJoin(categories, and(
-      eq(categories.id, placeRevisionCategories.categoryId),
-      eq(categories.status, "published"),
+    .where(and(
+      inArray(placeRevisionCategories.placeRevisionId, revisionIds),
+      validPublishedCategory(placeRevisionCategories.categoryId),
     ))
-    .innerJoin(categoryRevisions, and(
-      eq(categoryRevisions.id, categories.publishedRevisionId),
-      eq(categoryRevisions.categoryId, categories.id),
-    ))
-    .where(inArray(placeRevisionCategories.placeRevisionId, revisionIds))
     .orderBy(
       asc(placeRevisionCategories.placeRevisionId),
       asc(placeRevisionCategories.sortOrder),
       asc(placeRevisionCategories.categoryId),
     );
-  const mediaRows = await db.select({
+  const mediaRows = await executor.select({
     revisionId: placeRevisionMedia.placeRevisionId,
     id: media.id,
     altText: media.altText,
@@ -390,8 +436,8 @@ async function hydratePlaces(
       contentLanguage: selected.locale,
       address: row.address,
       district: row.district,
-      latitude: Number(row.latitude),
-      longitude: Number(row.longitude),
+      latitude: publicCoordinate(row.latitude, -90, 90),
+      longitude: publicCoordinate(row.longitude, -180, 180),
       twoGisUrl: row.twoGisUrl,
       phone: row.phone,
       websiteUrl: row.websiteUrl,
@@ -412,73 +458,62 @@ async function hydratePlaces(
 export async function listCategories(input: {
   locale: SupportedLocale;
 }): Promise<PublicCategory[]> {
-  const rows = await db.select({
-    id: categories.id,
-    legacyId: categories.legacyId,
-    slug: categories.slug,
-    revisionId: categoryRevisions.id,
-    primaryLocale: categoryRevisions.primaryLocale,
-    displayOrder: categoryRevisions.displayOrder,
-    coverMediaId: categoryRevisions.coverMediaId,
-  }).from(categories).innerJoin(categoryRevisions, and(
-    eq(categoryRevisions.id, categories.publishedRevisionId),
-    eq(categoryRevisions.categoryId, categories.id),
-  )).where(and(
-    eq(categories.status, "published"),
-    sql`exists (
-      select 1
-      from ${categoryTranslations}
-      where ${categoryTranslations.categoryRevisionId} = ${categoryRevisions.id}
-    )`,
-    sql`exists (
-      select 1
-      from ${media}
-      where ${media.id} = ${categoryRevisions.coverMediaId}
-        and ${media.deletedAt} is null
-    )`,
-  )).orderBy(
-    asc(categoryRevisions.displayOrder),
-    asc(categories.slug),
-    asc(categories.id),
-  );
-  if (rows.length === 0) return [];
-  const translationRows = await db.select({
-    revisionId: categoryTranslations.categoryRevisionId,
-    locale: categoryTranslations.locale,
-    name: categoryTranslations.name,
-    tagline: categoryTranslations.tagline,
-  }).from(categoryTranslations).where(inArray(
-    categoryTranslations.categoryRevisionId,
-    rows.map((row) => row.revisionId),
-  ));
-
-  return rows.map((row) => {
-    const selected = selectTranslation(
-      translationRows
-        .filter((translation) => translation.revisionId === row.revisionId)
-        .map((translation) => ({
-          locale: translation.locale,
-          value: {
-            name: translation.name,
-            tagline: translation.tagline,
-          },
-        })),
-      input.locale,
-      row.primaryLocale,
+  return withPublicSnapshot(async (executor) => {
+    const rows = await executor.select({
+      id: categories.id,
+      legacyId: categories.legacyId,
+      slug: categories.slug,
+      revisionId: categoryRevisions.id,
+      primaryLocale: categoryRevisions.primaryLocale,
+      displayOrder: categoryRevisions.displayOrder,
+      coverMediaId: categoryRevisions.coverMediaId,
+    }).from(categories).innerJoin(categoryRevisions, and(
+      eq(categoryRevisions.id, categories.publishedRevisionId),
+      eq(categoryRevisions.categoryId, categories.id),
+    )).where(validPublishedCategory(categories.id)).orderBy(
+      asc(categoryRevisions.displayOrder),
+      asc(categories.slug),
+      asc(categories.id),
     );
-    const coverMediaId = row.coverMediaId as string;
-    return {
-      id: row.id,
-      legacyId: row.legacyId,
-      slug: row.slug,
-      name: selected.value.name,
-      tagline: selected.value.tagline,
-      requestedLanguage: input.locale,
-      contentLanguage: selected.locale,
-      displayOrder: row.displayOrder,
-      coverMediaId,
-      coverImageUrl: publicMediaUrl(coverMediaId),
-    };
+    if (rows.length === 0) return [];
+    const translationRows = await executor.select({
+      revisionId: categoryTranslations.categoryRevisionId,
+      locale: categoryTranslations.locale,
+      name: categoryTranslations.name,
+      tagline: categoryTranslations.tagline,
+    }).from(categoryTranslations).where(inArray(
+      categoryTranslations.categoryRevisionId,
+      rows.map((row) => row.revisionId),
+    ));
+
+    return rows.map((row) => {
+      const selected = selectTranslation(
+        translationRows
+          .filter((translation) => translation.revisionId === row.revisionId)
+          .map((translation) => ({
+            locale: translation.locale,
+            value: {
+              name: translation.name,
+              tagline: translation.tagline,
+            },
+          })),
+        input.locale,
+        row.primaryLocale,
+      );
+      const coverMediaId = row.coverMediaId as string;
+      return {
+        id: row.id,
+        legacyId: row.legacyId,
+        slug: row.slug,
+        name: selected.value.name,
+        tagline: selected.value.tagline,
+        requestedLanguage: input.locale,
+        contentLanguage: selected.locale,
+        displayOrder: row.displayOrder,
+        coverMediaId,
+        coverImageUrl: publicMediaUrl(coverMediaId),
+      };
+    });
   });
 }
 
@@ -496,52 +531,56 @@ export async function listPlaces(input: ListPlacesInput): Promise<Page<PublicPla
   if (shape.query) conditions.push(searchFilter(shape.query));
   if (cursor) conditions.push(afterCursor(cursor));
 
-  const rows = await db.select(publicPlaceSelection)
-    .from(places)
-    .innerJoin(placeRevisions, and(
-      eq(placeRevisions.id, places.publishedRevisionId),
-      eq(placeRevisions.placeId, places.id),
-    ))
-    .where(and(...conditions))
-    .orderBy(asc(featuredSort), asc(places.slug), asc(places.id))
-    .limit(limit + 1) as PlaceIdentityRow[];
-  const hasMore = rows.length > limit;
-  const pageRows = rows.slice(0, limit);
-  const data = await hydratePlaces(pageRows, input.locale);
-  const last = pageRows.at(-1);
+  return withPublicSnapshot(async (executor) => {
+    const rows = await executor.select(publicPlaceSelection)
+      .from(places)
+      .innerJoin(placeRevisions, and(
+        eq(placeRevisions.id, places.publishedRevisionId),
+        eq(placeRevisions.placeId, places.id),
+      ))
+      .where(and(...conditions))
+      .orderBy(asc(featuredSort), asc(places.slug), asc(places.id))
+      .limit(limit + 1) as PlaceIdentityRow[];
+    const hasMore = rows.length > limit;
+    const pageRows = rows.slice(0, limit);
+    const data = await hydratePlaces(executor, pageRows, input.locale);
+    const last = pageRows.at(-1);
 
-  return {
-    data,
-    page: {
-      hasMore,
-      nextCursor: hasMore && last
-        ? encodeCursor({
-          v: 1,
-          kind: "places",
-          ...shape,
-          rank: last.sortRank,
-          slug: last.slug,
-          id: last.id,
-        })
-        : null,
-    },
-  };
+    return {
+      data,
+      page: {
+        hasMore,
+        nextCursor: hasMore && last
+          ? encodeCursor({
+            v: 1,
+            kind: "places",
+            ...shape,
+            rank: last.sortRank,
+            slug: last.slug,
+            id: last.id,
+          })
+          : null,
+      },
+    };
+  });
 }
 
 export async function getPlaceBySlug(input: {
   slug: string;
   locale: SupportedLocale;
 }): Promise<PublicPlace | null> {
-  const rows = await db.select(publicPlaceSelection)
-    .from(places)
-    .innerJoin(placeRevisions, and(
-      eq(placeRevisions.id, places.publishedRevisionId),
-      eq(placeRevisions.placeId, places.id),
-    ))
-    .where(and(
-      ...publishedPlaceConditions(),
-      eq(places.slug, input.slug),
-    ))
-    .limit(1) as PlaceIdentityRow[];
-  return (await hydratePlaces(rows, input.locale))[0] ?? null;
+  return withPublicSnapshot(async (executor) => {
+    const rows = await executor.select(publicPlaceSelection)
+      .from(places)
+      .innerJoin(placeRevisions, and(
+        eq(placeRevisions.id, places.publishedRevisionId),
+        eq(placeRevisions.placeId, places.id),
+      ))
+      .where(and(
+        ...publishedPlaceConditions(),
+        eq(places.slug, input.slug),
+      ))
+      .limit(1) as PlaceIdentityRow[];
+    return (await hydratePlaces(executor, rows, input.locale))[0] ?? null;
+  });
 }

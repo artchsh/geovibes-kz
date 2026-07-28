@@ -1,6 +1,6 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import {
   categories,
@@ -65,14 +65,15 @@ async function categoryFixture(options: {
     coverMediaId: cover.id,
   }).returning();
   const translations = options.translations ?? { ru: { name: slug } };
-  await db.insert(categoryTranslations).values(
-    Object.entries(translations).map(([locale, value]) => ({
-      categoryRevisionId: revision.id,
-      locale: locale as Locale,
-      name: value!.name,
-      tagline: value!.tagline ?? null,
-    })),
-  );
+  const translationValues = Object.entries(translations).map(([locale, value]) => ({
+    categoryRevisionId: revision.id,
+    locale: locale as Locale,
+    name: value!.name,
+    tagline: value!.tagline ?? null,
+  }));
+  if (translationValues.length > 0) {
+    await db.insert(categoryTranslations).values(translationValues);
+  }
   let publishedRevisionId: string | null = status === "archived" ? revision.id : null;
   if (status === "published") {
     if (options.validPublishedPointer === false) {
@@ -497,12 +498,21 @@ describe("public catalog API", () => {
       slug: "cursor-a",
       id: randomUUID(),
     });
+    const [cursorPayload, cursorSignature] = cursor.split(".");
+    const base64urlAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const finalSignatureIndex = base64urlAlphabet.indexOf(cursorSignature.at(-1)!);
+    expect(finalSignatureIndex % 4).toBe(0);
+    const aliasedSignature = `${cursorSignature.slice(0, -1)}${
+      base64urlAlphabet[finalSignatureIndex + 1]
+    }`;
+    const aliasedCursor = `${cursorPayload}.${aliasedSignature}`;
 
     for (const query of [
       `?limit=1&category=cursor-category&cursor=${encodeURIComponent(tampered)}`,
       `?limit=1&cursor=${encodeURIComponent(cursor)}`,
       "?cursor=not-a-cursor",
       `?limit=1&category=cursor-category&cursor=${encodeURIComponent(staleShape)}`,
+      `?limit=1&category=cursor-category&cursor=${encodeURIComponent(aliasedCursor)}`,
     ]) {
       const response = await placesRequest(query);
       expect(response.status).toBe(400);
@@ -523,6 +533,10 @@ describe("public catalog API", () => {
       "?unknown=true",
       "?category=Not%20A%20Slug",
       "?query=",
+      "?query=%00",
+      "?query=%0A",
+      "?query=%1F",
+      "?query=%7F",
     ]) {
       const response = await placesRequest(query);
       expect(response.status).toBe(400);
@@ -532,9 +546,96 @@ describe("public catalog API", () => {
     expect(categoryUnknown.status).toBe(400);
   });
 
+  it("uses one canonical public-category validity rule everywhere", async () => {
+    const valid = await categoryFixture({ slug: "valid-public-category" });
+    const missingTranslation = await categoryFixture({
+      slug: "missing-translation-category",
+      translations: {},
+    });
+    const deletedCover = await categoryFixture({ slug: "deleted-category-cover" });
+    await db.update(media).set({ deletedAt: new Date() })
+      .where(eq(media.id, deletedCover.cover.id));
+    const mismatchedPointer = await categoryFixture({
+      slug: "mismatched-category-pointer",
+      validPublishedPointer: false,
+    });
+    const place = await placeFixture({
+      slug: "place-with-invalid-categories",
+      categoryIds: [
+        valid.id,
+        missingTranslation.id,
+        deletedCover.id,
+        mismatchedPointer.id,
+      ],
+    });
+
+    const categoryBody = await (await categoriesRequest()).json();
+    expect(categoryBody.data.map((item: { slug: string }) => item.slug))
+      .toEqual(["valid-public-category"]);
+
+    const placeBody = await (await detailRequest(place.slug)).json();
+    expect(placeBody.data.categoryIds).toEqual([valid.id]);
+
+    for (const slug of [
+      missingTranslation.slug,
+      deletedCover.slug,
+      mismatchedPointer.slug,
+    ]) {
+      const filtered = await placesRequest(`?category=${slug}`);
+      expect((await filtered.json()).data).toEqual([]);
+    }
+    expect((await (await placesRequest("?category=valid-public-category")).json()).data)
+      .toEqual([expect.objectContaining({ id: place.id })]);
+  });
+
+  it("omits published places with corrupt nullable or out-of-range coordinates", async () => {
+    const category = await categoryFixture();
+    const nullLatitude = await placeFixture({
+      slug: "null-latitude",
+      categoryIds: [category.id],
+    });
+    const outOfRangeLongitude = await placeFixture({
+      slug: "invalid-longitude",
+      categoryIds: [category.id],
+    });
+    await db.update(placeRevisions).set({ latitude: null })
+      .where(eq(placeRevisions.id, nullLatitude.publishedRevision.id));
+    await db.update(placeRevisions).set({ longitude: "181.000000" })
+      .where(eq(placeRevisions.id, outOfRangeLongitude.publishedRevision.id));
+
+    expect((await (await placesRequest()).json()).data).toEqual([]);
+    for (const slug of [nullLatitude.slug, outOfRangeLongitude.slug]) {
+      const detail = await detailRequest(slug);
+      expect(detail.status).toBe(404);
+      expect((await detail.json()).error.code).toBe("PLACE_NOT_FOUND");
+    }
+  });
+
+  it("runs every multi-query public read in repeatable-read read-only mode", async () => {
+    const category = await categoryFixture();
+    const place = await placeFixture({ categoryIds: [category.id] });
+    const transactionSpy = vi.spyOn(db, "transaction");
+    try {
+      expect((await categoriesRequest()).status).toBe(200);
+      expect((await placesRequest()).status).toBe(200);
+      expect((await detailRequest(place.slug)).status).toBe(200);
+
+      expect(transactionSpy).toHaveBeenCalledTimes(3);
+      for (const [, config] of transactionSpy.mock.calls) {
+        expect(config).toEqual({
+          isolationLevel: "repeatable read",
+          accessMode: "read only",
+        });
+      }
+    } finally {
+      transactionSpy.mockRestore();
+    }
+  });
+
   it("returns request IDs and exact configured CORS headers on public responses", async () => {
     const response = await placesRequest();
     const body = await response.json();
+
     expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/);
     expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:8081");
     expect(response.headers.get("access-control-allow-credentials")).toBe("true");
