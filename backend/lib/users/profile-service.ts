@@ -59,6 +59,14 @@ function invalidInput(field: string, message: string): never {
   });
 }
 
+
+export function requireValidUserId(userId: string): void {
+  if (!UUID_PATTERN.test(userId)) {
+    throw new ApiError("INVALID_REQUEST", 400, "Request validation failed", {
+      userId: "Must be a valid UUID",
+    });
+  }
+}
 function validateIds(
   values: string[],
   field: string,
@@ -132,7 +140,9 @@ async function assertPublicCategories(
       inArray(categories.id, categoryIds),
       eq(categories.status, "published"),
       publicCategoryCondition(),
-    ));
+    ))
+    .orderBy(asc(categories.id))
+    .for("share");
   if (rows.length !== categoryIds.length) {
     throw new ApiError(code, 422, "One or more category references are unavailable");
   }
@@ -150,7 +160,9 @@ async function assertPublicPlaces(
       inArray(places.id, placeIds),
       eq(places.status, "published"),
       publicPlaceCondition(),
-    ));
+    ))
+    .orderBy(asc(places.id))
+    .for("share");
   if (rows.length !== placeIds.length) {
     throw new ApiError(code, 422, "One or more place references are unavailable");
   }
@@ -174,6 +186,8 @@ async function lockUser(
   executor: Transaction,
   userId: string,
 ): Promise<void> {
+  // All Task 7 writes lock in user -> sorted catalog identity order.
+  // Catalog lifecycle writes take FOR UPDATE on the same identities.
   const [user] = await executor.select({ id: users.id })
     .from(users)
     .where(eq(users.id, userId))
@@ -217,13 +231,21 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 export function getProfile(userId: string): Promise<PublicProfile> {
-  return profileFrom(db, userId);
+  requireValidUserId(userId);
+  return db.transaction(
+    (transaction) => profileFrom(transaction, userId),
+    {
+      isolationLevel: "repeatable read",
+      accessMode: "read only",
+    },
+  );
 }
 
 export async function setInterests(
   userId: string,
   interestCategoryIds: string[],
 ): Promise<string[]> {
+  requireValidUserId(userId);
   const ids = validateIds(
     interestCategoryIds,
     "interestCategoryIds",
@@ -240,6 +262,7 @@ export async function updateProfile(
   userId: string,
   input: UpdateProfileInput,
 ): Promise<PublicProfile> {
+  requireValidUserId(userId);
   let username:
     | { normalizedUsername: string; displayUsername: string }
     | undefined;
@@ -292,6 +315,7 @@ export async function mergeGuestState(
   userId: string,
   input: MergeGuestInput,
 ): Promise<GuestState> {
+  requireValidUserId(userId);
   const placeIds = validateIds(
     input.savedPlaceIds,
     "savedPlaceIds",
@@ -362,4 +386,5 @@ export const profileLimits = {
 
 export const catalogReferenceValidation = {
   assertPublicPlaces,
+  lockUser,
 } as const;
