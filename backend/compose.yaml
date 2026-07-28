@@ -5,6 +5,8 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@database:5432/geovibes
     ports:
       - "3001:3001"
     depends_on:
