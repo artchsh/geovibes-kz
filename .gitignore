@@ -44,3 +44,8 @@ example
 test-results/
 playwright-report/
 .worktrees/
+backend/.env
+backend/.next/
+backend/node_modules/
+backend/storage/*
+!backend/storage/.gitkeep
