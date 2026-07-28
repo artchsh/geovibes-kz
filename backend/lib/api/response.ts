@@ -22,6 +22,19 @@ export function dataResponse(
   );
 }
 
+export function paginatedDataResponse(
+  request: Request,
+  result: {
+    data: unknown[];
+    page: { nextCursor: string | null; hasMore: boolean };
+  },
+): Response {
+  return Response.json(
+    { ...result, requestId: randomUUID() },
+    { status: 200, headers: withBaseHeaders(request) },
+  );
+}
+
 export function emptyResponse(
   request: Request,
   status = 204,
