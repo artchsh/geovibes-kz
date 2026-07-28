@@ -24,5 +24,6 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(hashValue: string, password: string): Promise<boolean> {
+  if (Buffer.byteLength(password, "utf8") > MAX_PASSWORD_BYTES) return false;
   return verify(hashValue, password);
 }

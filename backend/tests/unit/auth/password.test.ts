@@ -20,4 +20,18 @@ describe("password helpers", () => {
     await expect(hashPassword("a".repeat(257))).rejects.toThrow();
     await expect(hashPassword("🙂".repeat(65))).rejects.toThrow();
   });
+
+  it("processes a 256-byte candidate during verification", async () => {
+    const password = "a".repeat(256);
+    const hash = await hashPassword(password);
+
+    await expect(verifyPassword(hash, password)).resolves.toBe(true);
+  });
+
+  it.each([
+    ["257-byte ASCII", "a".repeat(257)],
+    ["multibyte over-limit", "🙂".repeat(65)],
+  ])("rejects a %s candidate before native verification", async (_label, candidate) => {
+    await expect(verifyPassword("not-an-argon2-hash", candidate)).resolves.toBe(false);
+  });
 });

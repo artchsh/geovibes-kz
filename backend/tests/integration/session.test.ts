@@ -98,12 +98,24 @@ describe("PostgreSQL rate limiter", () => {
       allowed: true,
       retryAfterSeconds: 0,
     });
-    await expect(firstLimiter.consumeRateLimit("login:almaty:127.0.0.1", rule)).resolves.toMatchObject({
-      allowed: false,
+    const denied = await firstLimiter.consumeRateLimit("login:almaty:127.0.0.1", rule);
+    expect(denied.allowed).toBe(false);
+    expect(denied.retryAfterSeconds).toBeGreaterThan(0);
+    expect(denied.retryAfterSeconds).toBeLessThanOrEqual(60);
+
+    let [bucket] = await db.select().from(rateLimitBuckets);
+    expect(bucket.attempts).toBe(3);
+
+    await db.update(rateLimitBuckets)
+      .set({ expiresAt: new Date(Date.now() - 1_000) })
+      .where(eq(rateLimitBuckets.keyDigest, bucket.keyDigest));
+    await expect(secondLimiter.consumeRateLimit("login:almaty:127.0.0.1", rule)).resolves.toEqual({
+      allowed: true,
+      retryAfterSeconds: 0,
     });
 
-    const [bucket] = await db.select().from(rateLimitBuckets);
-    expect(bucket.attempts).toBe(3);
+    [bucket] = await db.select().from(rateLimitBuckets);
+    expect(bucket.attempts).toBe(1);
   });
 });
 

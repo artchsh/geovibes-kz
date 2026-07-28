@@ -22,8 +22,12 @@ describe("requireRole", () => {
     );
   });
 
-  it("rejects roles below the minimum", () => {
-    expect(() => requireRole(user("editor"), "admin")).toThrowError(
+  it.each([
+    ["user", "editor"],
+    ["user", "admin"],
+    ["editor", "admin"],
+  ] as const)("rejects a %s below the %s minimum", (actual, minimum) => {
+    expect(() => requireRole(user(actual), minimum)).toThrowError(
       expect.objectContaining({ code: "FORBIDDEN", status: 403 }),
     );
   });
