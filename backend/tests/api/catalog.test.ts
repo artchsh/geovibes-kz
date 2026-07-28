@@ -537,6 +537,16 @@ describe("public catalog API", () => {
       "?query=%0A",
       "?query=%1F",
       "?query=%7F",
+      "?query=coffee%0A",
+      "?query=%0Acoffee",
+      "?query=coffee%0D",
+      "?query=%0Dcoffee",
+      "?query=coffee%09",
+      "?query=%09coffee",
+      "?query=coffee%00",
+      "?query=%00coffee",
+      "?query=coffee%7F",
+      "?query=%7Fcoffee",
     ]) {
       const response = await placesRequest(query);
       expect(response.status).toBe(400);
