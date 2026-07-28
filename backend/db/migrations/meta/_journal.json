@@ -8,6 +8,13 @@
       "when": 1785206680118,
       "tag": "0000_sudden_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785207263888,
+      "tag": "0001_oval_jasper_sitwell",
+      "breakpoints": true
     }
   ]
 }

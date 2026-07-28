@@ -1,4 +1,5 @@
-import { index, integer, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, index, integer, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 export const passwordCredentials = pgTable("password_credentials", {
@@ -16,7 +17,10 @@ export const sessions = pgTable("sessions", {
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }).notNull().defaultNow(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [index("sessions_user_expiry_idx").on(table.userId, table.expiresAt)]);
+}, (table) => [
+  index("sessions_user_expiry_idx").on(table.userId, table.expiresAt),
+  check("sessions_token_digest_lower_hex", sql`${table.tokenDigest} ~ '^[0-9a-f]{64}$'`),
+]);
 
 export const rateLimitBuckets = pgTable(
   "rate_limit_buckets",

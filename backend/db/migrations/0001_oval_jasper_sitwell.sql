@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_token_digest_lower_hex" CHECK ("sessions"."token_digest" ~ '^[0-9a-f]{64}$');--> statement-breakpoint

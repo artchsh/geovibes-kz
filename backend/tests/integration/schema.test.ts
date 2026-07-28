@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { users } from "@/db/schema";
+import { sessions, users } from "@/db/schema";
 import { resetTestDatabase } from "@/tests/setup/database";
 
 describe("user schema", () => {
@@ -64,5 +64,20 @@ describe("user schema", () => {
     expect(await db.query.rateLimitBuckets.findFirst({
       where: eq(rateLimitBuckets.keyDigest, keyDigest),
     })).toMatchObject({ attempts: 2 });
+  });
+  it("rejects malformed session token digests", async () => {
+    const [user] = await db.insert(users).values({
+      normalizedUsername: "session-check",
+      displayUsername: "Session Check",
+    }).returning({ id: users.id });
+
+    const insertSession = (tokenDigest: string) => db.insert(sessions).values({
+      userId: user.id,
+      tokenDigest,
+      expiresAt: new Date("2026-08-28T00:00:00.000Z"),
+    });
+
+    await expect(insertSession("x")).rejects.toThrow();
+    await expect(insertSession("g".repeat(64))).rejects.toThrow();
   });
 });
