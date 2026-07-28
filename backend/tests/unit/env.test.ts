@@ -15,4 +15,22 @@ describe("parseEnv", () => {
       }),
     ).toThrow(/AUTH_SECRET/);
   });
+
+  it("parses exact mobile origins and rejects wildcard CORS configuration", () => {
+    const base = {
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/geovibes",
+      AUTH_SECRET: "development-only-auth-secret-with-at-least-32-characters",
+      APP_ORIGIN: "http://localhost:3001",
+      SESSION_TTL_DAYS: "30",
+      MEDIA_ROOT: "./storage",
+      MAX_UPLOAD_BYTES: "10485760",
+    };
+
+    expect(parseEnv({
+      ...base,
+      MOBILE_ORIGINS: "geovibes://, http://localhost:8081",
+    }).MOBILE_ORIGINS).toEqual(["geovibes://", "http://localhost:8081"]);
+    expect(() => parseEnv({ ...base, MOBILE_ORIGINS: "*" }))
+      .toThrow(/MOBILE_ORIGINS/);
+  });
 });

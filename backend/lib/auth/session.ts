@@ -14,6 +14,8 @@ export type SessionRecord = typeof sessions.$inferSelect;
 
 const LAST_USED_WRITE_INTERVAL_MS = 5 * 60_000;
 
+type SessionDatabase = Pick<typeof db, "insert" | "update">;
+
 function digestToken(token: string): string {
   return createHash("sha256").update(token + env.AUTH_SECRET).digest("hex");
 }
@@ -21,11 +23,12 @@ function digestToken(token: string): string {
 export async function createSession(
   userId: string,
   context: SessionContext,
+  database: SessionDatabase = db,
 ): Promise<{ token: string; session: SessionRecord }> {
   void context;
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + env.SESSION_TTL_DAYS * 86_400_000);
-  const [session] = await db.insert(sessions).values({
+  const [session] = await database.insert(sessions).values({
     userId,
     tokenDigest: digestToken(token),
     expiresAt,
@@ -73,4 +76,13 @@ export async function revokeAllUserSessions(userId: string): Promise<void> {
   await db.update(sessions)
     .set({ revokedAt: new Date() })
     .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+}
+
+export async function revokeSessionToken(token: string): Promise<void> {
+  await db.update(sessions)
+    .set({ revokedAt: new Date() })
+    .where(and(
+      eq(sessions.tokenDigest, digestToken(token)),
+      isNull(sessions.revokedAt),
+    ));
 }
