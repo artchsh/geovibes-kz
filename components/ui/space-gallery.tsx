@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image } from "expo-image";
 import { Pressable, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { Tag } from "@/components/ui/tag";
 import { images } from "@/lib/images";
@@ -21,6 +22,7 @@ export function SpaceGallery({
   isSaved,
   onToggleSaved,
 }: SpaceGalleryProps) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const hasMultipleImages = imageKeys.length > 1;
 
@@ -35,7 +37,10 @@ export function SpaceGallery({
   }
 
   return (
-    <View className="h-[271px] w-full overflow-hidden rounded-[20px] bg-border">
+    <View
+      className="w-full overflow-hidden rounded-3xl bg-border"
+      style={{ aspectRatio: 4 / 3 }}
+    >
       <Image
         accessibilityIgnoresInvertColors
         className="h-full w-full"
@@ -45,12 +50,14 @@ export function SpaceGallery({
         style={{ height: "100%", width: "100%" }}
       />
 
-      <View className="absolute left-2 top-2">
+      <View className="absolute left-3 top-3">
         <Tag label={categoryLabel} variant="dark" />
       </View>
 
       <Pressable
-        accessibilityLabel={isSaved ? "Remove from saved" : "Save venue"}
+        accessibilityLabel={
+          isSaved ? t("a11y.removeSavedVenue") : t("a11y.saveVenue")
+        }
         accessibilityRole="button"
         className="absolute right-3 top-3 h-11 w-11 items-center justify-center rounded-full bg-darkSurface"
         hitSlop={6}
@@ -66,27 +73,25 @@ export function SpaceGallery({
       {hasMultipleImages ? (
         <>
           <Pressable
-            accessibilityLabel="Previous image"
+            accessibilityLabel={t("a11y.previousImage")}
             accessibilityRole="button"
-            className="absolute left-2 top-1/2 h-6 w-6 -translate-y-3 items-center justify-center rounded-full bg-[#b93b36]"
-            hitSlop={8}
+            className="absolute left-3 top-1/2 h-11 w-11 -translate-y-[22px] items-center justify-center rounded-full bg-darkSurface/80"
             onPress={() => changeImage(-1)}
           >
-            <Ionicons color={colors.white} name="chevron-back" size={16} />
+            <Ionicons color={colors.white} name="chevron-back" size={22} />
           </Pressable>
           <Pressable
-            accessibilityLabel="Next image"
+            accessibilityLabel={t("a11y.nextImage")}
             accessibilityRole="button"
-            className="absolute right-2 top-1/2 h-6 w-6 -translate-y-3 items-center justify-center rounded-full bg-[#b93b36]"
-            hitSlop={8}
+            className="absolute right-3 top-1/2 h-11 w-11 -translate-y-[22px] items-center justify-center rounded-full bg-darkSurface/80"
             onPress={() => changeImage(1)}
           >
-            <Ionicons color={colors.white} name="chevron-forward" size={16} />
+            <Ionicons color={colors.white} name="chevron-forward" size={22} />
           </Pressable>
         </>
       ) : null}
 
-      <View className="absolute bottom-2.5 left-0 right-0 flex-row justify-center gap-1.5">
+      <View className="absolute bottom-3 left-0 right-0 flex-row justify-center gap-1.5">
         {imageKeys.map((imageKey, index) => (
           <View
             className={`h-2 w-2 rounded-full ${

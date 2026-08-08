@@ -9,7 +9,11 @@ import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { useAppState } from "@/lib/app-state";
 import { images } from "@/lib/images";
-import { categories, type Place, places } from "@/lib/mock-data";
+import {
+  getCategories,
+  getPlaces,
+  type Place,
+} from "@/lib/mock-data";
 import { colors } from "@/theme";
 
 function SavedPlaceSeparator() {
@@ -25,11 +29,13 @@ function renderSavedPlace({ item }: { item: Place }) {
 }
 
 function SavedPlaceRow({ place }: { place: Place }) {
+  const { t } = useTranslation();
   const { toggleSavedVenue } = useAppState();
+  const categories = getCategories(t);
   const category = categories.find((item) => item.id === place.categoryId);
 
   return (
-    <View className="flex-row items-center gap-3 rounded-2xl bg-bg p-2">
+    <View className="flex-row items-center gap-3 rounded-2xl bg-white p-3">
       <Pressable
         accessibilityLabel={`${place.title}. ${place.subtitle}`}
         accessibilityRole="button"
@@ -42,7 +48,7 @@ function SavedPlaceRow({ place }: { place: Place }) {
           contentFit="cover"
           recyclingKey={place.id}
           source={images[place.imageKey]}
-          style={{ height: 76, width: 76 }}
+          style={{ height: 88, width: 88 }}
         />
         <View className="min-w-0 flex-1 gap-1">
           <Text
@@ -73,6 +79,7 @@ function SavedPlaceRow({ place }: { place: Place }) {
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { savedVenueIds } = useAppState();
+  const places = getPlaces(t);
   const savedPlaces = savedVenueIds
     .map((id) => places.find((place) => place.id === id))
     .filter((place): place is Place => place !== undefined);
@@ -81,7 +88,7 @@ export default function ProfileScreen() {
   ).size;
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <FlatList
         className="flex-1"
         contentContainerStyle={{
@@ -94,7 +101,7 @@ export default function ProfileScreen() {
         ItemSeparatorComponent={SavedPlaceSeparator}
         keyExtractor={savedPlaceKey}
         ListEmptyComponent={
-          <View className="items-center rounded-[24px] bg-[#edf5bb] px-6 py-7">
+          <View className="items-center rounded-3xl bg-[#edf5bb] px-6 py-8">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-darkSurface">
               <Ionicons
                 color={colors.white}
@@ -120,7 +127,7 @@ export default function ProfileScreen() {
           </View>
         }
         ListFooterComponent={
-          <View className="mt-5 flex-row items-center gap-3 rounded-2xl border border-border px-4 py-3.5">
+          <View className="mt-6 flex-row items-center gap-3 rounded-2xl bg-white px-4 py-3.5">
             <Ionicons
               color={colors.muted}
               name="phone-portrait-outline"
@@ -132,10 +139,10 @@ export default function ProfileScreen() {
           </View>
         }
         ListHeaderComponent={
-          <View className="mb-3 gap-5">
+          <View className="mb-4 gap-8">
             <ScreenHeader titleLines={[t("profile.title")]} />
 
-            <View className="overflow-hidden rounded-[24px] bg-darkSurface p-5">
+            <View className="overflow-hidden rounded-3xl bg-darkSurface p-6">
               <View className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-primary" />
               <View className="absolute -right-4 top-24 h-16 w-16 rounded-full border-[10px] border-white/10" />
 

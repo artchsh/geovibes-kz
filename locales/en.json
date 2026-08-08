@@ -1,42 +1,54 @@
 {
   "app": {
     "name": "GeoVibes",
-    "tagline": "Кушай. Покупай. Танцуй."
+    "tagline": "Eat. Shop. Dance."
   },
   "onboarding": {
-    "cta": "ИСКАТЬ",
-    "slogan": "Наша Разница В\nВайбе"
+    "cta": "EXPLORE",
+    "slogan": "It's all about\nthe vibe"
   },
   "nav": {
-    "home": "Главная",
-    "list": "Список",
-    "profile": "Профиль",
-    "settings": "Настройки"
+    "home": "Home",
+    "list": "Categories",
+    "profile": "Profile",
+    "settings": "Settings"
   },
   "home": {
-    "searchPlaceholder": "Поиск по прекрасным местам...",
-    "allPlaces": "Все vibe места",
+    "heading": "Best Vibe\nPlaces!",
+    "searchPlaceholder": "Find a great place...",
+    "allPlaces": "All vibe places",
     "emptyCategory": "There are no places in this category yet"
   },
   "list": {
-    "heading": "The most interesting\ncategories"
+    "heading": "The most interesting\ncategories",
+    "subtitle": "Choose a mood — we have already curated the places"
   },
   "category": {
     "notFound": "Category not found",
     "placeCount_one": "{{count}} place",
+    "placeCount_few": "{{count}} places",
+    "placeCount_many": "{{count}} places",
     "placeCount_other": "{{count}} places"
   },
   "space": {
     "notFound": "Venue not found",
     "description": "Description",
-    "whatInside": "What's inside:",
+    "whatInside": "Similar places",
     "route": "Directions",
     "call": "Call",
-    "share": "Share"
+    "share": "Share",
+    "openUntil": "Open until {{time}}",
+    "fallbackCategory": "VIBE PLACE"
+  },
+  "common": {
+    "comingSoon": "A new section is coming soon"
   },
   "search": {
     "heading": "Find a place",
-    "empty": "No places found"
+    "popular": "Popular now",
+    "results": "Results",
+    "empty": "No places found",
+    "clear": "Clear search"
   },
   "profile": {
     "title": "My profile",
@@ -75,5 +87,45 @@
     "feedbackSubject": "GeoVibes feedback",
     "about": "A curated guide to Almaty. No paid rankings or random recommendations.",
     "version": "Version {{version}}"
+  },
+  "a11y": {
+    "back": "Back",
+    "saveBookmark": "Save place",
+    "removeBookmark": "Remove from saved places",
+    "rating": "Rating {{rating}} out of 5",
+    "saveVenue": "Save place",
+    "removeSavedVenue": "Remove place from saved places",
+    "previousImage": "Previous photo",
+    "nextImage": "Next photo"
+  },
+  "catalog": {
+    "categories": {
+      "1": { "label": "Cocktails", "tagline": "Signature drinks and more" },
+      "2": { "label": "Burgers", "tagline": "Marbled beef and honest sauces" },
+      "3": { "label": "DJ/Disco", "tagline": "Let's dance Vogue!" },
+      "4": { "label": "Clothing", "tagline": "Local brands" },
+      "5": { "label": "Jewelry", "tagline": "Shine in the moonlight" }
+    },
+    "places": {
+      "1": { "title": "Operacionnaya", "subtitle": "A collective of Kazakhstani brands", "tag": "POPULAR" },
+      "2": { "title": "Warm Evening", "subtitle": "A cocktail bar overlooking the city", "tag": "EDITOR'S PICK" },
+      "3": { "title": "Forma", "subtitle": "Local designers and objects for the home" },
+      "4": { "title": "Charcoal Bun", "subtitle": "Juicy burgers, crispy fries, and honest sauces", "tag": "SMASH BURGERS" },
+      "5": { "title": "Meat & Brioche", "subtitle": "A small burger spot for a leisurely lunch" },
+      "6": { "title": "Red Corner", "subtitle": "Spicy burgers and an easygoing evening playlist", "tag": "OPEN LATE" },
+      "7": { "title": "Rhythm", "subtitle": "A dance floor, vinyl, and selections by local DJs", "tag": "DJ SETS" },
+      "8": { "title": "Basement 12", "subtitle": "An intimate club with house music and soft lighting" },
+      "9": { "title": "After Midnight", "subtitle": "Disco, funk, and people who came to dance", "tag": "FRIDAY & SATURDAY" },
+      "10": { "title": "Quiet Cut", "subtitle": "A considered wardrobe from Kazakhstani labels" },
+      "11": { "title": "Shift", "subtitle": "Everyday pieces, denim, and clean silhouettes", "tag": "LOCAL BRANDS" },
+      "12": { "title": "Point of Light", "subtitle": "Minimal jewelry for every day" },
+      "13": { "title": "Altyn Line", "subtitle": "A contemporary take on Kazakh motifs", "tag": "HANDMADE" },
+      "14": { "title": "Moonstone", "subtitle": "Silver, natural stones, and delicate forms" }
+    },
+    "locations": {
+      "1": "15 Panfilov Street",
+      "2": "40 Dostyk Avenue",
+      "default": "Almaty, Kazakhstan"
+    }
   }
 }

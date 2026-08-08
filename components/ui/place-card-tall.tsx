@@ -54,7 +54,7 @@ export function PlaceCardTall({
         onPress={onPress}
       >
         <View
-          className="w-full overflow-hidden rounded-2xl"
+          className="w-full overflow-hidden rounded-3xl"
           style={{
             aspectRatio: 345 / 204,
             backgroundColor: placeholderColors[imageKey],
@@ -86,15 +86,15 @@ export function PlaceCardTall({
           </View>
         </View>
 
-        <View className="gap-0.5 pt-2">
+        <View className="gap-1 pt-3">
           <Text
-            className="font-sans text-base leading-5 text-black"
+            className="font-sans-semibold text-[17px] leading-6 text-darkSurface"
             numberOfLines={1}
           >
             {title}
           </Text>
           <Text
-            className="font-sans text-sm leading-[19px] text-[#525252]"
+            className="font-sans text-[13px] leading-[19px] text-muted"
             numberOfLines={2}
           >
             {subtitle}

@@ -4,20 +4,24 @@ type ActionChipProps = {
   label: string;
   variant?: "primary" | "default";
   onPress?: () => void;
+  wide?: boolean;
 };
 
 export function ActionChip({
   label,
   variant = "default",
   onPress,
+  wide = false,
 }: ActionChipProps) {
   const isPrimary = variant === "primary";
 
   return (
     <Pressable
       accessibilityRole="button"
-      className={`items-center justify-center rounded-[18px] px-4 py-2.5 ${
-        isPrimary ? "bg-primary" : "bg-bg"
+      className={`min-h-12 items-center justify-center rounded-full px-5 ${
+        wide ? "flex-1" : ""
+      } ${
+        isPrimary ? "bg-primary" : "bg-white"
       }`}
       onPress={onPress}
     >

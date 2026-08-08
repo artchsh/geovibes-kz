@@ -42,7 +42,9 @@ export function PlaceCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${subtitle}`}
-      className="h-[182px] w-full overflow-hidden rounded-md"
+      className={`w-full overflow-hidden rounded-3xl active:opacity-90 ${
+        variant === "featured" ? "h-[228px]" : "h-[196px]"
+      }`}
       onPress={onPress}
     >
       {imageSource ? (
@@ -83,27 +85,31 @@ export function PlaceCard({
           right: 0,
           bottom: 0,
           left: 0,
-          height: 106,
+          height: variant === "featured" ? 150 : 124,
           zIndex: 1,
         }}
       />
 
-      <View className="flex-1 p-2" style={styles.content}>
+      <View className="flex-1 p-4" style={styles.content}>
         {tag ? (
-          <View className="self-start rounded-md bg-accentOrange px-[9px] py-1.5">
-            <Text className="font-sans-bold text-xs text-white">{tag}</Text>
+          <View className="self-start rounded-lg bg-accentOrange px-3 py-2">
+            <Text className="font-sans-bold text-xs text-darkSurface">{tag}</Text>
           </View>
         ) : null}
 
         <View className="mt-auto">
           <Text
-            className="font-sans-bold text-base text-white"
+            className={
+              variant === "featured"
+                ? "font-display text-[26px] leading-8 text-white"
+                : "font-sans-bold text-lg text-white"
+            }
             numberOfLines={1}
           >
             {title}
           </Text>
           <Text
-            className="font-sans text-[13px] leading-[17px] text-white/80"
+            className="mt-0.5 font-sans text-[13px] leading-[18px] text-white/80"
             numberOfLines={1}
           >
             {subtitle}

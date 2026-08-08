@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,17 +6,17 @@ import { useTranslation } from "react-i18next";
 
 import { BackButton } from "@/components/ui/back-button";
 import { PlaceCardTall } from "@/components/ui/place-card-tall";
+import { images } from "@/lib/images";
 import { getCategoryDetail } from "@/lib/mock-data";
-import { colors } from "@/theme";
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const categoryDetail = getCategoryDetail(id);
+  const categoryDetail = getCategoryDetail(id, t);
 
   if (!categoryDetail) {
     return (
-      <SafeAreaView className="flex-1 bg-white px-4 pt-3" edges={["top"]}>
+      <SafeAreaView className="flex-1 bg-bg px-4 pt-4" edges={["top"]}>
         <BackButton onPress={() => router.back()} />
         <View className="flex-1 items-center justify-center pb-16">
           <Text className="font-display text-3xl text-black">
@@ -28,32 +28,35 @@ export default function CategoryScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="px-4 pt-3">
+        <View className="px-4 pt-4">
           <BackButton onPress={() => router.back()} />
 
-          <View className="mt-2 flex-row items-start justify-between gap-4">
+          <View className="mt-6 flex-row items-start justify-between gap-4">
             <View className="flex-1 pt-0.5">
-              <Text className="font-display text-[32px] leading-[38px] text-black">
+              <Text className="font-display text-[36px] leading-10 text-darkSurface">
                 {categoryDetail.name}
               </Text>
-              <Text className="font-sans text-sm leading-5 text-[#525252]">
+              <Text className="mt-1 font-sans text-[13px] leading-5 text-muted">
                 {categoryDetail.subtitle} ·{" "}
                 {t("category.placeCount", { count: categoryDetail.count })}
               </Text>
             </View>
 
-            <View className="h-16 w-16 items-center justify-center rounded-xl bg-[#f7c3be]">
-              <Ionicons color={colors.primary} name="wine-outline" size={30} />
-            </View>
+            <Image
+              className="rounded-2xl bg-white"
+              contentFit="cover"
+              source={images[categoryDetail.imageKey]}
+              style={{ height: 80, width: 80 }}
+            />
           </View>
 
-          <View className="mt-5 gap-2.5">
+          <View className="mt-8 gap-6">
             {categoryDetail.places.map((place) => (
               <PlaceCardTall
                 {...place}

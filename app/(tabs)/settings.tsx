@@ -24,6 +24,7 @@ type SettingsRowProps = {
   onPress?: () => void;
   trailing?: ReactNode;
   destructive?: boolean;
+  disabled?: boolean;
 };
 
 function SettingsRow({
@@ -33,6 +34,7 @@ function SettingsRow({
   onPress,
   trailing,
   destructive = false,
+  disabled = false,
 }: SettingsRowProps) {
   const content = (
     <>
@@ -75,7 +77,11 @@ function SettingsRow({
   return (
     <Pressable
       accessibilityRole="button"
-      className="min-h-14 flex-row items-center gap-3 p-3 active:opacity-70"
+      accessibilityState={{ disabled }}
+      className={`min-h-14 flex-row items-center gap-3 p-3 active:opacity-70 ${
+        disabled ? "opacity-40" : ""
+      }`}
+      disabled={disabled}
       onPress={onPress}
     >
       {content}
@@ -85,7 +91,7 @@ function SettingsRow({
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <Text className="mb-2 font-display text-2xl leading-8 text-darkSurface">
+    <Text className="mb-3 font-sans-bold text-xs uppercase tracking-wider text-muted">
       {children}
     </Text>
   );
@@ -120,18 +126,18 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 112 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="gap-5 px-4 pt-3">
+        <View className="gap-8 px-4 pt-4">
           <ScreenHeader titleLines={[t("settings.title")]} />
 
           <View>
             <SectionTitle>{t("settings.languageTitle")}</SectionTitle>
-            <View className="flex-row gap-1 rounded-2xl bg-darkSurface p-1.5">
+            <View className="flex-row gap-1 rounded-2xl bg-white p-1.5">
               {languages.map((item) => {
                 const selected = language === item.code;
                 return (
@@ -139,14 +145,14 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     className={`min-h-11 flex-1 items-center justify-center rounded-xl px-2 ${
-                      selected ? "bg-white" : "bg-transparent"
+                      selected ? "bg-primary" : "bg-transparent"
                     }`}
                     key={item.code}
                     onPress={() => void setLanguage(item.code)}
                   >
                     <Text
                       className={`font-sans-semibold text-xs ${
-                        selected ? "text-darkSurface" : "text-white"
+                        selected ? "text-white" : "text-darkSurface"
                       }`}
                     >
                       {item.label}
@@ -177,7 +183,7 @@ export default function SettingsScreen() {
 
           <View>
             <SectionTitle>{t("settings.dataTitle")}</SectionTitle>
-            <View className="overflow-hidden rounded-2xl bg-bg">
+            <View className="overflow-hidden rounded-2xl bg-white">
               <SettingsRow
                 description={t("settings.savedDescription", {
                   count: savedVenueIds.length,
@@ -195,6 +201,7 @@ export default function SettingsScreen() {
               <View className="ml-[64px] h-px bg-border" />
               <SettingsRow
                 destructive
+                disabled={!savedVenueIds.length}
                 icon="trash-outline"
                 label={t("settings.clearSaved")}
                 onPress={confirmClearSaved}
@@ -204,7 +211,7 @@ export default function SettingsScreen() {
 
           <View>
             <SectionTitle>{t("settings.contactTitle")}</SectionTitle>
-            <View className="overflow-hidden rounded-2xl bg-bg">
+            <View className="overflow-hidden rounded-2xl bg-white">
               <SettingsRow
                 description={t("settings.suggestDescription")}
                 icon="add-circle-outline"
@@ -221,7 +228,7 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View className="items-center rounded-[24px] bg-pink px-5 py-6">
+          <View className="items-center rounded-3xl bg-white px-6 py-8">
             <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary">
               <Ionicons color={colors.white} name="heart" size={24} />
             </View>

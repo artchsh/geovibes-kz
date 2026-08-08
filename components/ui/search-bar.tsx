@@ -13,13 +13,14 @@ export function SearchBar({ placeholder, onPress }: SearchBarProps) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={placeholder}
-      className="h-12 w-full flex-row items-center rounded-xl border border-border bg-white px-4"
+      className="h-14 w-full flex-row items-center gap-3 rounded-2xl bg-white px-4 active:opacity-70"
       onPress={onPress}
     >
-      <Text className="flex-1 font-sans text-sm text-faint" numberOfLines={1}>
+      <Ionicons color={colors.muted} name="search" size={20} />
+      <Text className="flex-1 font-sans text-sm text-muted" numberOfLines={1}>
         {placeholder}
       </Text>
-      <Ionicons color={colors.faint} name="search" size={20} />
+      <Ionicons color={colors.faint} name="arrow-forward" size={18} />
     </Pressable>
   );
 }

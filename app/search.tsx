@@ -1,24 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useDeferredValue, useState } from "react";
-import { FlatList, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { BackButton } from "@/components/ui/back-button";
 import { PlaceCard } from "@/components/ui/place-card";
-import { categories, places } from "@/lib/mock-data";
+import { getCategories, getPlaces, type Place } from "@/lib/mock-data";
 import { colors } from "@/theme";
 
 function SearchResultSeparator() {
-  return <View className="h-2.5" />;
+  return <View className="h-4" />;
 }
 
-function searchResultKey(place: (typeof places)[number]) {
+function searchResultKey(place: Place) {
   return place.id;
 }
 
-function renderSearchResult({ item }: { item: (typeof places)[number] }) {
+function renderSearchResult({ item }: { item: Place }) {
   return (
     <PlaceCard
       {...item}
@@ -29,6 +29,8 @@ function renderSearchResult({ item }: { item: (typeof places)[number] }) {
 
 export default function SearchScreen() {
   const { t } = useTranslation();
+  const categories = getCategories(t);
+  const places = getPlaces(t);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query.trim().toLocaleLowerCase());
   const results = deferredQuery
@@ -43,21 +45,31 @@ export default function SearchScreen() {
     : places;
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <View className="flex-row items-center gap-3 px-4 pt-3">
+    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+      <View className="flex-row items-center gap-3 px-4 pt-4">
         <BackButton onPress={() => router.back()} />
-        <View className="h-12 flex-1 flex-row items-center rounded-xl border border-border px-4">
+        <View className="h-14 flex-1 flex-row items-center gap-3 rounded-2xl bg-white px-4">
+          <Ionicons color={colors.muted} name="search" size={20} />
           <TextInput
             accessibilityLabel={t("home.searchPlaceholder")}
             autoFocus
-            className="flex-1 font-sans text-sm text-black outline-none"
+            className="flex-1 font-sans text-sm text-darkSurface outline-none"
             onChangeText={setQuery}
             placeholder={t("home.searchPlaceholder")}
             placeholderTextColor={colors.faint}
             returnKeyType="search"
             value={query}
           />
-          <Ionicons color={colors.faint} name="search" size={20} />
+          {query ? (
+            <Pressable
+              accessibilityLabel={t("search.clear")}
+              accessibilityRole="button"
+              className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
+              onPress={() => setQuery("")}
+            >
+              <Ionicons color={colors.muted} name="close" size={22} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -67,16 +79,33 @@ export default function SearchScreen() {
         data={results}
         ItemSeparatorComponent={SearchResultSeparator}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         keyExtractor={searchResultKey}
         ListEmptyComponent={
-          <Text className="py-12 text-center font-sans text-muted">
-            {t("search.empty")}
-          </Text>
+          <View className="items-center rounded-3xl bg-white px-6 py-10">
+            <Ionicons color={colors.primary} name="search" size={32} />
+            <Text className="mt-4 text-center font-display text-2xl text-darkSurface">
+              {t("search.empty")}
+            </Text>
+            <Pressable
+              className="mt-5 min-h-12 items-center justify-center rounded-full bg-primary px-6"
+              onPress={() => setQuery("")}
+            >
+              <Text className="font-sans-bold text-sm text-white">
+                {t("search.clear")}
+              </Text>
+            </Pressable>
+          </View>
         }
         ListHeaderComponent={
-          <Text className="mb-3 font-display text-3xl text-black">
-            {t("search.heading")}
-          </Text>
+          <View className="mb-4 mt-2 flex-row items-end justify-between">
+            <Text className="font-display text-[28px] leading-9 text-darkSurface">
+              {query ? t("search.results") : t("search.popular")}
+            </Text>
+            <Text className="font-sans-semibold text-xs text-muted">
+              {results.length}
+            </Text>
+          </View>
         }
         renderItem={renderSearchResult}
         showsVerticalScrollIndicator={false}

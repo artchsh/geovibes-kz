@@ -36,12 +36,12 @@ export function CategoryCard({
     <Pressable
       accessibilityRole="button"
       accessibilityState={active ? { selected: true } : {}}
-      className={`h-[120px] w-[110px] overflow-hidden rounded-md ${
-        active ? "bg-primary" : "bg-border"
+      className={`h-[132px] w-[112px] overflow-hidden rounded-2xl border-2 ${
+        active ? "border-primary bg-white" : "border-transparent bg-white"
       }`}
       onPress={onPress}
     >
-      <View className="mx-[5px] h-[88px] overflow-hidden rounded-b-md">
+      <View className="h-[94px] overflow-hidden bg-bg">
         {imageSource ? (
           <Image
             accessibilityIgnoresInvertColors
@@ -63,9 +63,13 @@ export function CategoryCard({
           </View>
         )}
       </View>
-      <View className="flex-1 items-center justify-center px-1">
+      <View
+        className={`flex-1 items-center justify-center px-2 ${
+          active ? "bg-primary" : "bg-white"
+        }`}
+      >
         <Text
-          className={`font-sans-medium text-sm ${
+          className={`font-sans-semibold text-[13px] ${
             active ? "text-white" : "text-black"
           }`}
           numberOfLines={1}

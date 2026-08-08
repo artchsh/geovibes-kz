@@ -8,15 +8,15 @@ type TagProps = {
 export function Tag({ label, variant = "accent" }: TagProps) {
   return (
     <View
-      className={`self-start px-[9px] py-1.5 ${
+      className={`self-start px-3 py-2 ${
         variant === "dark"
           ? "rounded-full bg-darkSurface"
-          : "rounded-md bg-accentOrange"
+          : "rounded-lg bg-accentOrange"
       }`}
     >
       <Text
-        className={`font-sans-bold text-white ${
-          variant === "dark" ? "text-xs" : "text-[13px]"
+        className={`font-sans-bold text-xs ${
+          variant === "dark" ? "text-white" : "text-darkSurface"
         }`}
       >
         {label}

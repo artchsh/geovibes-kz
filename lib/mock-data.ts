@@ -53,155 +53,118 @@ export type SpaceDetail = {
   inside: Place[];
 };
 
-export const categories: Category[] = [
-  {
-    id: "1",
-    label: "Коктейли",
-    tagline: "Авторские напитки и не только",
-    imageKey: "cocktails",
-  },
-  {
-    id: "2",
-    label: "Бургеры",
-    tagline: "Мраморная говядина...",
-    imageKey: "burgers",
-  },
-  {
-    id: "3",
-    label: "DJ/Disco",
-    tagline: "Танцуем Vogue!",
-    imageKey: "disco",
-  },
-  {
-    id: "4",
-    label: "Одежда",
-    tagline: "Локальные бренды",
-    imageKey: "clothing",
-  },
-  {
-    id: "5",
-    label: "Украшения",
-    tagline: "Блестим на лунном свете",
-    imageKey: "jewelry",
-  },
+const categoryRecords: Pick<Category, "id" | "imageKey">[] = [
+  { id: "1", imageKey: "cocktails" },
+  { id: "2", imageKey: "burgers" },
+  { id: "3", imageKey: "disco" },
+  { id: "4", imageKey: "clothing" },
+  { id: "5", imageKey: "jewelry" },
 ];
 
-export const featuredPlace: Omit<Place, "categoryId"> = {
-  id: "1",
-  title: "Операционная",
-  subtitle: "Объединение казахстанских брендов",
-  tag: "ПОПУЛЯРНОЕ",
-  imageKey: "operation",
-};
-
-export const places: Place[] = [
+const placeRecords: Array<
+  Pick<Place, "id" | "imageKey" | "categoryId"> & { hasTag?: boolean }
+> = [
   {
     id: "1",
-    title: "Операционная",
-    subtitle: "Объединение казахстанских брендов",
-    tag: "ПОПУЛЯРНОЕ",
+    hasTag: true,
     imageKey: "operation",
     categoryId: "1",
   },
   {
     id: "2",
-    title: "Тёплый вечер",
-    subtitle: "Коктейльный бар с видом на город",
-    tag: "ВЫБОР РЕДАКЦИИ",
+    hasTag: true,
     imageKey: "cooperative",
     categoryId: "1",
   },
   {
     id: "3",
-    title: "Форма",
-    subtitle: "Локальные дизайнеры и предметы для дома",
     imageKey: "operation",
     categoryId: "4",
   },
   {
     id: "4",
-    title: "Булка на углях",
-    subtitle: "Сочные бургеры, хрустящий картофель и честный соус",
-    tag: "СМЭШ-БУРГЕРЫ",
+    hasTag: true,
     imageKey: "cooperative",
     categoryId: "2",
   },
   {
     id: "5",
-    title: "Мясо & Бриошь",
-    subtitle: "Небольшая бургерная для неспешного обеда",
     imageKey: "operation",
     categoryId: "2",
   },
   {
     id: "6",
-    title: "Красный угол",
-    subtitle: "Острые бургеры и вечерний плейлист без суеты",
-    tag: "ДО ПОЗДНЕГО",
+    hasTag: true,
     imageKey: "cooperative",
     categoryId: "2",
   },
   {
     id: "7",
-    title: "Ритм",
-    subtitle: "Танцпол, винил и селекция от местных диджеев",
-    tag: "DJ-СЕТЫ",
+    hasTag: true,
     imageKey: "operation",
     categoryId: "3",
   },
   {
     id: "8",
-    title: "Подвал 12",
-    subtitle: "Камерный клуб с хаусом и мягким светом",
     imageKey: "cooperative",
     categoryId: "3",
   },
   {
     id: "9",
-    title: "После полуночи",
-    subtitle: "Диско, фанк и люди, которые пришли танцевать",
-    tag: "ПЯТНИЦА И СУББОТА",
+    hasTag: true,
     imageKey: "operation",
     categoryId: "3",
   },
   {
     id: "10",
-    title: "Тихий крой",
-    subtitle: "Продуманный гардероб от казахстанских марок",
     imageKey: "cooperative",
     categoryId: "4",
   },
   {
     id: "11",
-    title: "Смена",
-    subtitle: "Повседневные вещи, деним и аккуратные силуэты",
-    tag: "ЛОКАЛЬНЫЕ БРЕНДЫ",
+    hasTag: true,
     imageKey: "operation",
     categoryId: "4",
   },
   {
     id: "12",
-    title: "Точка света",
-    subtitle: "Минималистичные украшения на каждый день",
     imageKey: "cooperative",
     categoryId: "5",
   },
   {
     id: "13",
-    title: "Алтын линия",
-    subtitle: "Современное прочтение казахских мотивов",
-    tag: "РУЧНАЯ РАБОТА",
+    hasTag: true,
     imageKey: "operation",
     categoryId: "5",
   },
   {
     id: "14",
-    title: "Лунный камень",
-    subtitle: "Серебро, натуральные камни и тонкие формы",
     imageKey: "cooperative",
     categoryId: "5",
   },
 ];
+
+export function getCategories(t: TFunction): Category[] {
+  return categoryRecords.map((category) => ({
+    ...category,
+    label: t(`catalog.categories.${category.id}.label`),
+    tagline: t(`catalog.categories.${category.id}.tagline`),
+  }));
+}
+
+export function getPlaces(t: TFunction): Place[] {
+  return placeRecords.map(({ hasTag, ...place }) => ({
+    ...place,
+    title: t(`catalog.places.${place.id}.title`),
+    subtitle: t(`catalog.places.${place.id}.subtitle`),
+    tag: hasTag ? t(`catalog.places.${place.id}.tag`) : undefined,
+  }));
+}
+
+export function getFeaturedPlace(t: TFunction): Omit<Place, "categoryId"> {
+  const { categoryId: _categoryId, ...featured } = getPlaces(t)[0];
+  return featured;
+}
 
 const placeRatings: Record<string, number> = {
   "1": 4.9,
@@ -225,13 +188,13 @@ const venueLocations: Record<
   { address: string; latitude: number; longitude: number; phone: string }
 > = {
   "1": {
-    address: "Ул. Панфилова, 15",
+    address: "1",
     latitude: 43.2567,
     longitude: 76.9456,
     phone: "+7 727 000 00 01",
   },
   "2": {
-    address: "Проспект Достык, 40",
+    address: "2",
     latitude: 43.2445,
     longitude: 76.9568,
     phone: "+7 727 000 00 02",
@@ -239,13 +202,18 @@ const venueLocations: Record<
 };
 
 const defaultLocation = {
-  address: "Алматы, Казахстан",
+  address: "default",
   latitude: 43.2389,
   longitude: 76.8897,
   phone: "+7 727 000 00 00",
 };
 
-export function getCategoryDetail(id: string): CategoryDetail | undefined {
+export function getCategoryDetail(
+  id: string,
+  t: TFunction,
+): CategoryDetail | undefined {
+  const categories = getCategories(t);
+  const places = getPlaces(t);
   const category = categories.find((item) => item.id === id);
   if (!category) return undefined;
 
@@ -266,7 +234,12 @@ export function getCategoryDetail(id: string): CategoryDetail | undefined {
   };
 }
 
-export function getSpaceDetail(id: string): SpaceDetail | undefined {
+export function getSpaceDetail(
+  id: string,
+  t: TFunction,
+): SpaceDetail | undefined {
+  const categories = getCategories(t);
+  const places = getPlaces(t);
   const place = places.find((item) => item.id === id);
   if (!place) return undefined;
 
@@ -284,9 +257,9 @@ export function getSpaceDetail(id: string): SpaceDetail | undefined {
     id: place.id,
     name: place.title,
     rating: placeRatings[id] ?? 4.7,
-    address: location.address,
-    hours: "Открыто до 23:00",
-    categoryTag: category?.label.toUpperCase() ?? "VIBE МЕСТО",
+    address: t(`catalog.locations.${location.address}`),
+    hours: t("space.openUntil", { time: "23:00" }),
+    categoryTag: category?.label.toLocaleUpperCase() ?? t("space.fallbackCategory"),
     description: place.subtitle,
     phone: location.phone,
     latitude: location.latitude,
@@ -299,3 +272,4 @@ export function getSpaceDetail(id: string): SpaceDetail | undefined {
       .slice(0, 2),
   };
 }
+import type { TFunction } from "i18next";

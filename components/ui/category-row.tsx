@@ -24,34 +24,36 @@ export function CategoryRow({
       accessibilityHint={subtitle}
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="h-[58px] flex-row items-center gap-2 border-b border-border"
+      className="min-h-[92px] flex-row items-center gap-3 rounded-2xl bg-white p-2 active:opacity-70"
       onPress={onPress}
     >
       <Image
         accessibilityIgnoresInvertColors
-        className="h-12 w-12 rounded-xl"
+        className="h-[76px] w-[76px] rounded-xl"
         contentFit="cover"
         recyclingKey={imageKey}
         source={images[imageKey]}
-        style={{ height: 48, width: 48 }}
+        style={{ height: 76, width: 76 }}
       />
 
       <View className="flex-1">
         <Text
-          className="font-sans text-base leading-5 text-black"
+          className="font-sans-semibold text-base leading-5 text-darkSurface"
           numberOfLines={1}
         >
           {label}
         </Text>
         <Text
-          className="font-sans text-sm leading-5 text-[#525252]"
+          className="font-sans text-[13px] leading-5 text-muted"
           numberOfLines={1}
         >
           {subtitle}
         </Text>
       </View>
 
-      <Ionicons color={colors.faint} name="chevron-forward" size={18} />
+      <View className="h-11 w-8 items-center justify-center">
+        <Ionicons color={colors.faint} name="chevron-forward" size={20} />
+      </View>
     </Pressable>
   );
 }

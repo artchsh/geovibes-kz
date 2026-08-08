@@ -1,86 +1,131 @@
 {
-  "_TODO": "Kazakh must be reviewed by a native speaker — do NOT auto-translate.",
   "app": {
     "name": "GeoVibes",
-    "tagline": "Кушай. Покупай. Танцуй."
+    "tagline": "Тамақтан. Сатып ал. Биле."
+  },
+  "common": {
+    "comingSoon": "Жаңа бөлім жақында пайда болады"
   },
   "onboarding": {
-    "_TODO": "Kazakh translations need native-speaker review.",
-    "cta": "ИСКАТЬ",
-    "slogan": "Наша Разница В\nВайбе"
+    "cta": "ІЗДЕУ",
+    "slogan": "Бар мәселе —\nвайбта"
   },
   "nav": {
-    "home": "Главная",
-    "list": "Список",
+    "home": "Басты",
+    "list": "Санаттар",
     "profile": "Профиль",
-    "settings": "Настройки"
+    "settings": "Баптаулар"
   },
   "home": {
-    "searchPlaceholder": "Поиск по прекрасным местам...",
-    "allPlaces": "Все vibe места",
-    "emptyCategory": "В этой категории пока нет мест"
+    "heading": "Үздік вайб\nорындары!",
+    "searchPlaceholder": "Керемет орын іздеу...",
+    "allPlaces": "Барлық вайб-орындар",
+    "emptyCategory": "Бұл санатта әзірге орындар жоқ"
   },
   "list": {
-    "_TODO": "Kazakh translation needs native-speaker review.",
-    "heading": "Самые интересные\nкатегории"
+    "heading": "Ең қызықты\nсанаттар",
+    "subtitle": "Көңіл күйіңізді таңдаңыз — орындарды біз іріктеп қойдық"
   },
   "category": {
-    "notFound": "Категория не найдена",
-    "placeCount_one": "{{count}} заведение",
-    "placeCount_other": "{{count}} заведений"
+    "notFound": "Санат табылмады",
+    "placeCount_one": "{{count}} орын",
+    "placeCount_few": "{{count}} орын",
+    "placeCount_many": "{{count}} орын",
+    "placeCount_other": "{{count}} орын"
   },
   "space": {
-    "_TODO": "Kazakh translations need native-speaker review.",
-    "notFound": "Место не найдено",
-    "description": "Описание",
-    "whatInside": "Что внутри:",
-    "route": "Маршрут",
-    "call": "Позвонить",
-    "share": "Поделиться"
+    "notFound": "Орын табылмады",
+    "description": "Сипаттама",
+    "whatInside": "Ұқсас орындар",
+    "route": "Бағыт",
+    "call": "Қоңырау шалу",
+    "share": "Бөлісу",
+    "openUntil": "{{time}}-ге дейін ашық",
+    "fallbackCategory": "ВАЙБ-ОРЫН"
   },
   "search": {
-    "_TODO": "Kazakh translations need native-speaker review.",
-    "heading": "Поиск мест",
-    "empty": "Ничего не найдено"
+    "heading": "Орын іздеу",
+    "popular": "Қазір танымал",
+    "results": "Нәтижелер",
+    "empty": "Ештеңе табылмады",
+    "clear": "Іздеуді тазарту"
   },
   "profile": {
-    "_TODO": "Kazakh translations need native-speaker review.",
-    "title": "Мой профиль",
-    "passport": "ВАЙБ-ПАСПОРТ",
+    "title": "Менің профилім",
+    "passport": "ВАЙБ ПАСПОРТЫ",
     "city": "Алматы",
-    "status": "ЛОКАЛЬНЫЙ ИССЛЕДОВАТЕЛЬ",
-    "savedStat": "сохранено",
-    "categoryStat": "категории",
-    "savedTitle": "Мои места",
-    "savedSubtitle": "Всё, куда хочется вернуться",
-    "emptyTitle": "Здесь будут ваши места",
-    "emptyBody": "Сохраняйте интересные места, чтобы быстро найти их перед следующим выходом.",
-    "discover": "Найти место",
-    "localNote": "Коллекция хранится только на этом устройстве. Аккаунт и синхронизация появятся позже."
+    "status": "ЖЕРГІЛІКТІ ЗЕРТТЕУШІ",
+    "savedStat": "сақталған",
+    "categoryStat": "санат",
+    "savedTitle": "Менің орындарым",
+    "savedSubtitle": "Қайта барғыңыз келетін орындардың бәрі",
+    "emptyTitle": "Орындарыңыз осында сақталады",
+    "emptyBody": "Келесі серуен алдында тез табу үшін қызықты орындарды сақтаңыз.",
+    "discover": "Орын табу",
+    "localNote": "Жинақ тек осы құрылғыда сақталады. Аккаунт пен синхрондау кейінірек қосылады."
   },
   "settings": {
-    "_TODO": "Kazakh translations need native-speaker review.",
-    "title": "Настройки",
-    "languageTitle": "Язык приложения",
-    "placeTitle": "Ваш город",
+    "title": "Баптаулар",
+    "languageTitle": "Қолданба тілі",
+    "placeTitle": "Сіздің қалаңыз",
     "cityLabel": "Алматы",
-    "cityDescription": "Сейчас GeoVibes работает только здесь",
-    "onlyCity": "ОСНОВНОЙ",
-    "dataTitle": "Данные на устройстве",
-    "savedLabel": "Сохранённые места",
-    "savedDescription": "Сохранено: {{count}}",
-    "clearSaved": "Очистить сохранённые",
-    "clearConfirmTitle": "Удалить все сохранённые места?",
-    "clearConfirmBody": "Вернуть коллекцию после удаления не получится.",
-    "cancel": "Отмена",
-    "clearAction": "Удалить",
-    "contactTitle": "Связаться с нами",
-    "suggestPlace": "Предложить место",
-    "suggestDescription": "Расскажите о месте, которое стоит добавить",
-    "suggestSubject": "Предложить место для GeoVibes",
-    "feedback": "Написать команде",
-    "feedbackSubject": "Обратная связь о GeoVibes",
-    "about": "Кураторский гид по местам Алматы. Без платных рейтингов и случайных рекомендаций.",
-    "version": "Версия {{version}}"
+    "cityDescription": "GeoVibes әзірге тек осы қалада жұмыс істейді",
+    "onlyCity": "НЕГІЗГІ",
+    "dataTitle": "Құрылғыдағы деректер",
+    "savedLabel": "Сақталған орындар",
+    "savedDescription": "Сақталғаны: {{count}}",
+    "clearSaved": "Сақталғандарды тазарту",
+    "clearConfirmTitle": "Барлық сақталған орынды өшіру керек пе?",
+    "clearConfirmBody": "Өшірілген жинақты қалпына келтіру мүмкін емес.",
+    "cancel": "Бас тарту",
+    "clearAction": "Өшіру",
+    "contactTitle": "Бізбен байланысу",
+    "suggestPlace": "Орын ұсыну",
+    "suggestDescription": "Қосуға тұрарлық орын туралы айтып беріңіз",
+    "suggestSubject": "GeoVibes үшін орын ұсыну",
+    "feedback": "Командаға жазу",
+    "feedbackSubject": "GeoVibes туралы пікір",
+    "about": "Алматыдағы орындарға арналған кураторлық гид. Ақылы рейтингтер мен кездейсоқ ұсыныстар жоқ.",
+    "version": "{{version}} нұсқасы"
+  },
+  "a11y": {
+    "back": "Артқа",
+    "saveBookmark": "Орынды сақтау",
+    "removeBookmark": "Сақталғандардан өшіру",
+    "rating": "Рейтинг: 5-тен {{rating}}",
+    "saveVenue": "Орынды сақтау",
+    "removeSavedVenue": "Орынды сақталғандардан өшіру",
+    "previousImage": "Алдыңғы фото",
+    "nextImage": "Келесі фото"
+  },
+  "catalog": {
+    "categories": {
+      "1": { "label": "Коктейльдер", "tagline": "Авторлық сусындар және тағы басқалар" },
+      "2": { "label": "Бургерлер", "tagline": "Мәрмәр сиыр еті және таза соус" },
+      "3": { "label": "DJ/Disco", "tagline": "Vogue билейміз!" },
+      "4": { "label": "Киім", "tagline": "Жергілікті брендтер" },
+      "5": { "label": "Әшекейлер", "tagline": "Ай сәулесінде жарқыраймыз" }
+    },
+    "places": {
+      "1": { "title": "Операционная", "subtitle": "Қазақстандық брендтер бірлестігі", "tag": "ТАНЫМАЛ" },
+      "2": { "title": "Жылы кеш", "subtitle": "Қала көрінісі бар коктейль-бар", "tag": "РЕДАКЦИЯ ТАҢДАУЫ" },
+      "3": { "title": "Форма", "subtitle": "Жергілікті дизайнерлер және үйге арналған заттар" },
+      "4": { "title": "Шоқтағы тоқаш", "subtitle": "Шырынды бургерлер, қытырлақ картоп және таза соус", "tag": "СМЭШ-БУРГЕРЛЕР" },
+      "5": { "title": "Ет & Бриошь", "subtitle": "Асықпай түскі ас ішуге арналған шағын бургер орны" },
+      "6": { "title": "Қызыл бұрыш", "subtitle": "Ащы бургерлер мен жайлы кешкі плейлист", "tag": "КЕШКЕ ДЕЙІН" },
+      "7": { "title": "Ырғақ", "subtitle": "Би алаңы, винил және жергілікті диджейлер топтамасы", "tag": "DJ-СЕТТЕР" },
+      "8": { "title": "12-жертөле", "subtitle": "Хаус музыкасы мен жұмсақ жарығы бар шағын клуб" },
+      "9": { "title": "Түн ортасынан кейін", "subtitle": "Диско, фанк және билеуге келген адамдар", "tag": "ЖҰМА ЖӘНЕ СЕНБІ" },
+      "10": { "title": "Тыныш пішім", "subtitle": "Қазақстандық маркалардың ойластырылған гардеробы" },
+      "11": { "title": "Ауысым", "subtitle": "Күнделікті киім, деним және жинақы силуэттер", "tag": "ЖЕРГІЛІКТІ БРЕНДТЕР" },
+      "12": { "title": "Жарық нүктесі", "subtitle": "Күнделікті тағуға арналған минималистік әшекейлер" },
+      "13": { "title": "Алтын желі", "subtitle": "Қазақ ою-өрнектерінің заманауи түсіндірмесі", "tag": "ҚОЛМЕН ЖАСАЛҒАН" },
+      "14": { "title": "Ай тасы", "subtitle": "Күміс, табиғи тастар және нәзік пішіндер" }
+    },
+    "locations": {
+      "1": "Панфилов көшесі, 15",
+      "2": "Достық даңғылы, 40",
+      "default": "Алматы, Қазақстан"
+    }
   }
 }

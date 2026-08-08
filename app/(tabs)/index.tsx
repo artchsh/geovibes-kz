@@ -8,10 +8,17 @@ import { CategoryCard } from "@/components/ui/category-card";
 import { PlaceCard } from "@/components/ui/place-card";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SearchBar } from "@/components/ui/search-bar";
-import { categories, featuredPlace, places } from "@/lib/mock-data";
+import {
+  getCategories,
+  getFeaturedPlace,
+  getPlaces,
+} from "@/lib/mock-data";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const categories = getCategories(t);
+  const places = getPlaces(t);
+  const featuredPlace = getFeaturedPlace(t);
   const [activeCategoryId, setActiveCategoryId] = useState(categories[0].id);
   // TODO: sort by nearest (needs geolocation)
   const filteredPlaces = places.filter(
@@ -19,28 +26,33 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="gap-5 px-4 pt-3">
-          <ScreenHeader titleLines={["Лучшие Вайб", "Места!"]} />
+        <View className="px-4 pt-4">
+          <ScreenHeader titleLines={t("home.heading").split("\n")} />
 
-          <SearchBar
-            onPress={() => router.push("/search")}
-            placeholder={t("home.searchPlaceholder")}
-          />
+          <View className="mt-6">
+            <SearchBar
+              onPress={() => router.push("/search")}
+              placeholder={t("home.searchPlaceholder")}
+            />
+          </View>
 
-          <PlaceCard
-            {...featuredPlace}
-            onPress={() => router.push("/space/1")}
-            variant="featured"
-          />
+          <View className="mt-6">
+            <PlaceCard
+              {...featuredPlace}
+              onPress={() => router.push(`/space/${featuredPlace.id}`)}
+              variant="featured"
+            />
+          </View>
 
           <ScrollView
-            contentContainerStyle={{ gap: 6 }}
+            className="mt-8"
+            contentContainerStyle={{ gap: 12 }}
             horizontal
             showsHorizontalScrollIndicator={false}
           >
@@ -55,11 +67,16 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
 
-          <Text className="font-sans-semibold text-base text-text">
-            {t("home.allPlaces")}
-          </Text>
+          <View className="mb-3 mt-8 flex-row items-end justify-between">
+            <Text className="font-display text-2xl leading-8 text-darkSurface">
+              {t("home.allPlaces")}
+            </Text>
+            <Text className="font-sans-semibold text-xs text-muted">
+              {filteredPlaces.length}
+            </Text>
+          </View>
 
-          <View className="gap-2.5">
+          <View className="gap-4">
             {filteredPlaces.length === 0 ? (
               <Text className="py-8 text-center font-sans text-sm text-muted">
                 {t("home.emptyCategory")}
